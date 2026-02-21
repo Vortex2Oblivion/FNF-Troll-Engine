@@ -103,7 +103,7 @@ function onCreateCutscene()
 
 	gfTurninDemon = new FlxSprite(speakimate.x, speakimate.y);
 	gfTurninDemon.frames = Paths.getSparrowAtlas("cutscenes/stress/gfTurnsDemon");
-	gfTurninDemon.animation.addByPrefix("turn", "GF Turnin Demon W Effect instance 1", 24, false);
+	gfTurninDemon.animation.addByPrefix("turn", "GF Turnin Demon W Effect", 24, false);
 	gfTurninDemon.visible = false;
 	gfTurninDemon.scrollFactor.set(speakimate.scrollFactor.x, speakimate.scrollFactor.y);
 	gfTurninDemon.antialiasing = true;
