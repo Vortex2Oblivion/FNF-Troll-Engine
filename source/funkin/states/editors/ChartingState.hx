@@ -610,6 +610,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 		add(tipGroup);
 		add(progressBG);
 		add(progressBar);
+		add(new TopBarOptions());
 
 		////
 		FlxG.mouse.visible = true;
@@ -954,49 +955,22 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 
 	function addSongUI():Void
 	{
-		var selectSongButton = newFlxUIButton(10, 20, "Select Song", openSongSelect);
-		var saveButton = newFlxUIButton(110, 20, "Save Chart", saveChartFile);
-		var saveEventJson = newFlxUIButton(110, saveButton.y + 30, 'Save Events', saveEventsFile);
-		var saveZipButton = newFlxUIButton(110, saveEventJson.y + 30, 'Save as ZIP', saveSongZIP);
-
-		///
-		var reloadSongJson:FlxUIButton = newFlxUIButton(saveButton.x + 90, saveButton.y, "Reload JSON", reloadSongJSON);
-		reloadSongJson.color = 0xFFFF0000;
-
-		var loadAutosaveBtn:FlxUIButton = newFlxUIButton(reloadSongJson.x, reloadSongJson.y + 30, 'Load Autosave', loadAutosave);
-
-		////
-		var loadEventJson:FlxUIButton = newFlxUIButton(loadAutosaveBtn.x, loadAutosaveBtn.y + 30, 'Open Events', openEventsJSON);
-
-		////
-		var editTracksButton:FlxUIButton = newFlxUIButton(loadAutosaveBtn.x, loadEventJson.y + 40, 'Edit Tracks', function() {
+		var editTracksButton:FlxUIButton = newFlxUIButton(10, 20, 'Edit Tracks', function() {
 			UI_box.selected_tab_id = "Tracks";
 		});
 
 		////
-		var fix_oob_notes:FlxUIButton = newFlxUIButton(loadAutosaveBtn.x, 300 - 40, 'Fix Notes', showWarning.bind('This action will fix notes that are outside of their corresponding section.\n\nProceed?', fixOOBNotes));
-		fix_oob_notes.color = FlxColor.PINK;
-		fix_oob_notes.label.color = FlxColor.WHITE;
-
-		var clear_events:FlxUIButton = newFlxUIButton(loadAutosaveBtn.x, 300, 'Clear events', showWarning.bind('Clear events?\n\nThis action cannot be undone.', clearEvents));
-		clear_events.color = FlxColor.RED;
-		clear_events.label.color = FlxColor.WHITE;
-
-		var clear_notes:FlxUIButton = newFlxUIButton(clear_events.x, clear_events.y + 30, 'Clear notes', showWarning.bind('Clear notes?\n\nThis action cannot be undone.', clearNotes));
-		clear_notes.color = FlxColor.RED;
-		clear_notes.label.color = FlxColor.WHITE;
-
-		var stepperSpeed = newFlxUINumericStepper(10, selectSongButton.y + 35, 0.1, 1, 0.1, 10, 1);
+		var stepperSpeed = newFlxUINumericStepper(10, 60, 0.1, 1, 0.1, 10, 1);
 		stepperSpeed.value = _song.speed;
 		stepperSpeed.name = 'song_speed';
 		blockPressWhileTypingOnStepper.push(stepperSpeed);
 
-		var stepperBPM = newFlxUINumericStepper(10, stepperSpeed.y + 35, 1, 1, 1, 9000, 3);
+		var stepperBPM = newFlxUINumericStepper(110, stepperSpeed.y, 1, 1, 1, 9000, 3);
 		stepperBPM.value = Conductor.bpm;
 		stepperBPM.name = 'song_bpm';
 		blockPressWhileTypingOnStepper.push(stepperBPM);
 
-		var stepperKeyCount = newFlxUINumericStepper(10, stepperBPM.y + 35, 1, 4, Note.minKeyCount, Note.maxKeyCount, 0);
+		var stepperKeyCount = newFlxUINumericStepper(210, stepperBPM.y, 1, 4, Note.minKeyCount, Note.maxKeyCount, 0);
 		stepperKeyCount.value = _song.keyCount;
 		stepperKeyCount.name = 'song_keyCount';
 		blockPressWhileTypingOnStepper.push(stepperKeyCount);
@@ -1075,26 +1049,16 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 		
 		var tab_group_song = new FlxUI(null, UI_box);
 		tab_group_song.name = "Song";
-		tab_group_song.add(selectSongButton);
 
-		tab_group_song.add(fix_oob_notes);
-		tab_group_song.add(clear_events);
-		tab_group_song.add(clear_notes);
-		tab_group_song.add(saveButton);
-		tab_group_song.add(saveEventJson);
-		tab_group_song.add(saveZipButton);
 		tab_group_song.add(editTracksButton);
 
-		tab_group_song.add(reloadSongJson);
-		tab_group_song.add(loadAutosaveBtn);
-		tab_group_song.add(loadEventJson);
 		tab_group_song.add(stepperSpeed);
 		tab_group_song.add(stepperBPM);
 		tab_group_song.add(stepperKeyCount);
 		tab_group_song.add(noteSkinInputText);
 		tab_group_song.add(noteSplashesInputText);
 
-		tab_group_song.add(new FlxText(selectSongButton.x, selectSongButton.y - 15, 0, Std.string(PlayState.song)));
+		tab_group_song.add(new FlxText(editTracksButton.x, editTracksButton.y - 15, 0, Std.string(PlayState.song)));
 
 		tab_group_song.add(new FlxText(stepperSpeed.x, stepperSpeed.y - 15, 0, 'Note Speed:'));
 		tab_group_song.add(new FlxText(stepperBPM.x, stepperBPM.y - 15, 0, 'Song BPM:'));
@@ -4479,6 +4443,91 @@ private abstract NoteSelection(Array<ChartObject>) to Array<ChartObject> {
 	////
 	function _sort(a:ChartObject, b:ChartObject):Int
 		return FlxSort.byValues(FlxSort.ASCENDING, a.strumTime, b.strumTime);
+}
+
+private class TBOptionData {
+	public final label:String;
+	public final func:Void -> Void;
+	inline public function new(label:String, ?func:Void -> Void) {
+		this.label = label;
+		this.func = func;
+	}
+}
+
+private class TopBarOptions extends FlxTypedGroup<FlxBasic> {
+	var mainButtons = new FlxTypedGroup<FlxButton>();
+	var buttonGroups = new FlxTypedGroup<FlxTypedGroup<FlxButton>>();
+
+	var curOpen:Int = -1;
+
+	public function new() {
+		super();
+
+		var btnData:Array<{label:String, options:Array<TBOptionData>}> = [
+			{label: 'File', options: [
+				new TBOptionData('Open Song', editor.openSongSelect), 
+				//new TBOptionData('Autosaves'), 
+				new TBOptionData('Load Autosave', editor.loadAutosave), 
+				new TBOptionData('Reload JSON', editor.reloadSongJSON), 
+				new TBOptionData('Save Chart', editor.saveChartFile), 
+				new TBOptionData('Export as ZIP', editor.saveSongZIP), 
+				new TBOptionData('Open Events', editor.openEventsJSON), 
+				new TBOptionData('Save Events', editor.saveEventsFile), 
+				new TBOptionData('Exit Editor')
+			]},
+			{label: 'Edit', options: [
+				new TBOptionData('Fix Notes', editor.showWarning.bind('This action will fix notes that are outside of their corresponding section.\n\nProceed?', editor.fixOOBNotes)), 
+				new TBOptionData('Clear Notes', editor.showWarning.bind('Clear notes?\n\nThis action cannot be undone.', editor.clearNotes)), 
+				new TBOptionData('Clear Events', editor.showWarning.bind('Clear events?\n\nThis action cannot be undone.', editor.clearEvents))
+			]},
+		];
+
+		add(mainButtons);
+		add(buttonGroups);
+
+		for (i => data in btnData) {
+			var mainButton = new FlxButton(data.label);
+			mainButton.setPosition(5 + (80 + 5) * i, 5);
+			mainButton.onUp.callback = openGroup.bind(i); 
+			mainButton.ID = i;
+			mainButton.scrollFactor.set();
+			mainButtons.add(mainButton);
+			
+			var grp = new FlxTypedGroup<FlxButton>();
+			grp.exists = false;
+			buttonGroups.add(grp);
+			
+			for (i => optionData in data.options) {
+				var button = new FlxButton(optionData.label);
+				button.setPosition(mainButton.x, mainButton.y + (i + 1) * 20);
+				//button.onUp.callback = onSelect.bind(data.label, label);
+				button.onUp.callback = optionData.func;
+				button.ID = i;
+				button.scrollFactor.set();
+				grp.add(button);	
+			}
+		}
+	}
+
+	var _ignoreClosing = false;
+	override function update(elapsed:Float) {
+		super.update(elapsed);
+		if (FlxG.mouse.justReleased && curOpen != -1 && !_ignoreClosing)
+			openGroup(-1);
+		_ignoreClosing = false;
+	}
+
+	public function openGroup(index:Int = -1) {
+		for (i => grp in buttonGroups) {
+			grp.exists = i == index && i != curOpen;
+		}
+		curOpen = (curOpen != index) ? index : -1;
+		_ignoreClosing = true;
+	}
+
+	public function onSelect(group:String, option:String) {
+		trace(group, option);
+	}
 }
 
 private class HistoryDisplay extends FlxSpriteGroup {
