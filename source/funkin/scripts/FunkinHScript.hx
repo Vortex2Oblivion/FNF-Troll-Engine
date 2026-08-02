@@ -414,12 +414,12 @@ class FunkinHScript extends FunkinScript
 	}
 
 	inline function traceException(e:Dynamic):Void {
-		print(e.toString());
-		/*
 		var posInfo = interpreter.posInfos();
-		var message = trim_redundant_error_trace(e.message, posInfo);
-		print(haxe.Log.formatOutput(message, posInfo));
-		*/
+		var str = (e is haxe.Exception) ? (e:haxe.Exception).message : Std.string(e);
+		str = trim_redundant_error_trace(str, posInfo);
+		str = haxe.Log.formatOutput(str, posInfo);
+		print(str);
+		DebugLog.addMessage(str, 0xFFFF0000);
 	}
 
 	public function stop()
