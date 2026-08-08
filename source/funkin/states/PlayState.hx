@@ -35,7 +35,6 @@ import funkin.states.editors.CharacterEditorState;
 import funkin.states.editors.ChartingState;
 import funkin.states.options.OptionsSubstate;
 import funkin.scripts.*;
-import funkin.scripts.Util;
 import flixel.*;
 import flixel.util.*;
 import flixel.util.FlxSignal;
@@ -3689,6 +3688,24 @@ class PlayState extends MusicBeatState
 		}
 		#end
 		return Globals.Function_Continue;
+	}
+
+	public function cancelTween(tag:String) {
+		if (modchartTweens.exists(tag)) {
+			var twn = modchartTweens.get(tag);
+			twn.cancel();
+			twn.destroy();
+			modchartTweens.remove(tag);
+		}
+	}
+
+	public function cancelTimer(tag:String) {
+		if (modchartTimers.exists(tag)) {
+			var tmr = modchartTimers.get(tag);
+			tmr.cancel();
+			tmr.destroy();
+			modchartTimers.remove(tag);
+		}
 	}
 
 	#if HSCRIPT_ALLOWED
