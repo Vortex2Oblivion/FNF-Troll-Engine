@@ -1,7 +1,7 @@
 package funkin.data.content;
 
 #if USING_MOONCHART
-import funkin.data.BaseSong;
+import funkin.data.Song;
 import funkin.data.Moonchart;
 import moonchart.Moonchart;
 import moonchart.backend.FormatDetector;
@@ -73,8 +73,8 @@ class MoonchartFolder extends Pack
 		//formatMap.clear();
 	}
 
-	override function getFreeplaySongs():Array<BaseSong> {
-		var songList:Array<BaseSong> = [];
+	override function getFreeplaySongs():Array<Song> {
+		var songList:Array<Song> = [];
 
 		for (sowyFormat in formatMap) {
 			try {
