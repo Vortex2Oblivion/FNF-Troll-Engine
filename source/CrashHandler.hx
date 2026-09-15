@@ -109,12 +109,11 @@ class CrashHandler {
 			default: NO;
 		}
 		#else
-		application.window.alert(callstack, errorName); // this shit barely works on linux!
+		lime.app.Application.current.window.alert(boxMessage, errorName); // this shit barely works on linux!
 		return NO;
 		#end
 	}
 
-	#if (WINDOWS_CRASH_HANDLER || UNIX_CRASH_HANDLER)
 	@:unreflective static inline function toMainMenu() @:privateAccess {
 		try{
 			if (FlxG.game._state != null) {
@@ -128,7 +127,6 @@ class CrashHandler {
 		FlxG.game._nextState = new funkin.states.MainMenuState();
 		FlxG.game.switchState();
 	}
-	#end
 
 	public static function callstackToString(callstack:Array<StackItem>):String {
 		var buf = new StringBuf();
