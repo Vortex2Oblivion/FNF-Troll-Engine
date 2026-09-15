@@ -46,7 +46,7 @@ class CrashHandler {
 		return 'logs/' + FileUtil.getDateFileName() + '.txt';
 	}
 
-	private static function onCrash(errorName:String):Void {
+	public static function onCrash(errorName:String):Void {
 		print("\nCall stack starts below");
 
 		final callstack:String = callstackToString(CallStack.exceptionStack(true));
@@ -93,7 +93,7 @@ class CrashHandler {
 			default: NO;
 		}
 		#elseif WINDOWS_CRASH_HANDLER
-		boxMessage += "\nWould you like to go to the main menu?";
+		boxMessage += "\n\n[YES] Main menu\n[NO] Close Program\n[CANCEL] Continue";
 		final ret:MessageBoxReturnValue = Windows.msgBox(boxMessage, errorName, MessageBoxIcon.ERROR | MessageBoxOptions.YESNOCANCEL | MessageBoxDefaultButton.BUTTON3);
 		return switch(ret) {
 			case YES: YES;
@@ -101,7 +101,7 @@ class CrashHandler {
 			default: NO;
 		}
 		#elseif (UNIX_CRASH_HANDLER && linc_filedialogs)
-		boxMessage += "\nWould you like to go to the main menu?";
+		boxMessage += "\n\n[YES] Main menu\n[NO] Close Program\n[CANCEL] Continue";
 		final btn:Button = FileDialogs.message(errorName, boxMessage, Choice.Yes_No_Cancel, Icon.Error);
 		return switch(btn) {
 			case Yes: YES;
