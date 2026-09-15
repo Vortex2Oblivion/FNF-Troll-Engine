@@ -75,6 +75,7 @@ class InitState extends TransitionableState
 			#if FUNNY_ALLOWED
 			Run("Loading bread", function() {
 				final graphic = Paths.image("Garlic-Bread-PNG-Images");
+				Paths.graphicDumpExclusions.push(graphic);
 				
 				final bread = Main.bread;
 				bread.bitmapData = graphic.bitmap;
