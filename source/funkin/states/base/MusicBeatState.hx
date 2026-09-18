@@ -89,7 +89,6 @@ class MusicBeatState extends TransitionableState
 
 	override function create()
 	{
-		FlxG.autoPause = ClientPrefs.autoPause;
 		super.create();
 	}
 
@@ -256,6 +255,14 @@ class MusicBeatState extends TransitionableState
 		Conductor.tracks = [FlxG.sound.music];
 		Conductor.startSong(FlxG.sound.music.time);
 		curMusic = key;
+	}
+
+	public static function cacheMusic(key:String) {
+		var md = MusicData.fromName(key);
+		if (md != null)
+			md.cache();
+		else
+			Paths.music(key);
 	}
 
 	// TODO: check the jukebox selection n shit and play THAT instead? idk lol

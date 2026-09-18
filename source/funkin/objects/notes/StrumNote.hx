@@ -78,7 +78,7 @@ class StrumNote extends NoteObject {
 			texture = PlayState.arrowSkin;
 
 		}else if (genScript.exists("setupReceptorTexture")) {
-			genScript.executeFunc("setupReceptorTexture", [this]);
+			genScript.call("setupReceptorTexture", [this]);
 		
 		}else {
 			var newTex:String = PlayState.arrowSkin;
@@ -135,7 +135,6 @@ class StrumNote extends NoteObject {
 		frames != null ? loadNoteAnims() : loadGraphic(Paths.image(textureKey));
 
 		scale.x = scale.y = Note.spriteScale;
-		defScale.copyFrom(scale);
 		updateHitbox();
 	}
 
