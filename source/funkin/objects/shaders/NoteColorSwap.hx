@@ -3,8 +3,9 @@ package funkin.objects.shaders;
 import funkin.objects.shaders.ColorSwap;
 
 class NoteColorSwap {
-    public static final shader:NoteColorSwapShader = new NoteColorSwapShader();
-    public var hue:Float = 0;
+	public static final shader:NoteColorSwapShader = new NoteColorSwapShader();
+
+	public var hue:Float = 0;
 	public var saturation:Float = 0;
 	public var brightness:Float = 0;
 	public var daAlpha:Float = 1;
@@ -15,55 +16,57 @@ class NoteColorSwap {
 	public var flashB:Float = 1;
 	public var flashA:Float = 1;
 
-    public function new() {}
+	public function new() {}
 
-    inline public function setHSB(h:Float = 0, s:Float = 0, b:Float = 0) {
-		hue=h;
-		saturation=s;
-		brightness=b;
+	inline public function setHSB(h:Float = 0, s:Float = 0, b:Float = 0) {
+		hue = h;
+		saturation = s;
+		brightness = b;
 	}
-	
+
 	inline public function setHSBInt(h:Int = 0, s:Int = 0, b:Int = 0) {
-		hue=h/360;
-		saturation=s/100;
-		brightness=b/100;
+		hue = h / 360;
+		saturation = s / 100;
+		brightness = b / 100;
 	}
 
 	inline public function setHSBArray(ray:Array<Float>) {
-		ray==null ? setHSB() : setHSB(ray[0], ray[1], ray[2]);
-	}
-	
-	inline public function setHSBIntArray(ray:Array<Int>) {
-		ray==null ? setHSB() : setHSBInt(ray[0], ray[1], ray[2]);
+		ray == null ? setHSB() : setHSB(ray[0], ray[1], ray[2]);
 	}
 
-    inline public function copyFrom(colorSwap:NoteColorSwap) {
-		setHSB(
-			colorSwap.hue,
-			colorSwap.saturation,
-			colorSwap.brightness	
-		);
+	inline public function setHSBIntArray(ray:Array<Int>) {
+		ray == null ? setHSB() : setHSBInt(ray[0], ray[1], ray[2]);
+	}
+
+	inline public function copyFrom(colorSwap:NoteColorSwap) {
+		setHSB(colorSwap.hue, colorSwap.saturation, colorSwap.brightness);
 	}
 
 	inline public function copyFromNormalSwap(colorSwap:ColorSwap) {
-		setHSB(
-			colorSwap.hue,
-			colorSwap.saturation,
-			colorSwap.brightness	
-		);
+		setHSB(colorSwap.hue, colorSwap.saturation, colorSwap.brightness);
 	}
 }
 
-class NoteColorSwapShader extends ColorSwapShader
-{
-    @:glVertexSource('
+class NoteColorSwapShader extends ColorSwapShader {
+	@:glVertexBody("
+		#pragma body
+		
+		mat4  transform = openfl_Matrix * mat4(
+			vec4( tX.x, tX.y, tX.z, 0.0 ),
+			vec4( tY.x, tY.y, tY.z, 0.0 ),
+			vec4( tZ.x, tZ.y, tZ.z, 0.0 ),
+			vec4( tT.x, tT.y, tT.z, 1.0 ));
+			
+		gl_Position = transform * openfl_Position;
+	")
+	
+	@:glVertexSource('
         #pragma header
-		'+#if (flixel <= "5.9.0")
-		'attribute float alpha;
+		' + #if (flixel <= "5.9.0") 'attribute float alpha;
 		attribute vec4 colorMultiplier;
 		attribute vec4 colorOffset;
 		uniform bool hasColorTransform;
-		'#else ''#end+'
+		' #else '' #end + '
 
 		attribute vec3 hsvShift;
 		attribute float daAlpha;
@@ -74,6 +77,11 @@ class NoteColorSwapShader extends ColorSwapShader
 		varying float daAlpha_v;
 		varying float flash_v;
 		varying vec4 flashColor_v;
+
+		uniform vec3 tX;
+		uniform vec3 tY;
+		uniform vec3 tZ;
+		uniform vec3 tT;
 
         void main() {
             #pragma body
@@ -91,6 +99,7 @@ class NoteColorSwapShader extends ColorSwapShader
             flashColor_v = flashColor;
         }
     ')
+
 	@:glFragmentSource('
 		#pragma header
 
@@ -120,8 +129,12 @@ class NoteColorSwapShader extends ColorSwapShader
 			color *= daAlpha_v;
 			gl_FragColor = colorMult(color);
 		}')
-	public function new()
-	{
+
+	public function new() {
 		super();
+		tX.value = [1.0, 0.0, 0.0];
+		tY.value = [0.0, 1.0, 0.0];
+		tZ.value = [0.0, 0.0, 0.0];
+		tT.value = [0.0, 0.0, 1.0];
 	}
 }
