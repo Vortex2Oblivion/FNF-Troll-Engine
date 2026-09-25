@@ -106,6 +106,7 @@
 	<set name="BUILD_DIR" value="export/release" />
 	<set name="BUILD_DIR" value="export/debug" if="debug" />
 	<set name="BUILD_DIR" value="export/32bit" if="32bits" />
+	<set name="BUILD_DIR" value="export/tracy" if="HXCPP_TRACY" />
 
 	<setenv name="HAXEPATH" value="./" />
 
@@ -186,6 +187,9 @@
 		<haxedef name="HXCPP_CATCH_SEGV" />
 		<haxedef name="openfl-enable-handle-error" />
 	</section>
+	<define name="HXCPP_TELEMETRY" if="HXCPP_TRACY" />
+	<define name="HXCPP_TRACY_ON_DEMAND" if="HXCPP_TRACY" />
+	<define name="HXCPP_TRACY_MEMORY" if="HXCPP_TRACY" />
 
 	<haxedef name="HXCPP_CPP17" if="cpp" />
 		

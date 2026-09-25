@@ -1,5 +1,6 @@
 package;
 
+import math.CoolMath;
 import haxe.io.Path;
 import openfl.display.Bitmap;
 import openfl.display.Sprite;
@@ -97,6 +98,42 @@ class Main extends Sprite
 	#end
 
 	public function new() {
+
+		#if SINE_BENCHMARK
+		var time = getTime();
+		var lastSin = 0.0;
+		var count = 0;
+		while( getTime() - time  < 10000){
+			lastSin = Math.sin(Math.random() * Math.PI * 2);
+			count ++;
+		}
+		trace(count);
+
+		var time = getTime();
+		var count = 0;
+		while( getTime() - time < 10000){
+			lastSin = CoolMath.fastSin(Math.random() * Math.PI * 2);
+			count ++;
+		}
+		trace(count);
+
+
+		var time = getTime();
+		var count = 0;
+		while(getTime() - time < 10000){
+			lastSin = CoolMath.fasterSin(Math.random() * Math.PI * 2);
+			count ++;
+		}
+		trace(count);
+
+		trace(lastSin); // smelly haxe we gotta do something with the sines or it will kill the code
+		#end
+
+		#if HXCPP_TRACY
+		FlxG.stage.addEventListener(openfl.events.Event.EXIT_FRAME, (_) -> cpp.vm.tracy.TracyProfiler.frameMark());
+		cpp.vm.tracy.TracyProfiler.messageAppInfo("Troll Engine");
+		cpp.vm.tracy.TracyProfiler.setThreadName("main");
+		#end
 		super();
 		instance = this;
 

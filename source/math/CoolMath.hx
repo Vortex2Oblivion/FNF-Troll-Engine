@@ -10,6 +10,26 @@ import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 
 class CoolMath/*Games*/{
+	public static function fastSin(x:Float) {
+		var t = x / (2 * Math.PI);
+		t -= Math.round(t);
+		final y = 8 * t - 16 * t * Math.abs(t);
+		return 0.225 * (y * Math.abs(y) - y) + y;
+	}
+
+	public static function fasterSin(x:Float) {
+		var t = x / (2 * Math.PI);
+		t -= Math.round(t);
+		final y = t * (8 - 16 * Math.abs(t));
+		return y * (0.776 + 0.224 * Math.abs(y));
+	}
+
+	public static inline function fastCos(x:Float)
+		return fastSin(x + Math.PI / 2);
+
+	public static inline function fastTan(x:Float)
+		return fastSin(x) / fastCos(x);
+
 	inline public static function coolLerp(current:Float, target:Float, elapsed:Float):Float
 		return FlxMath.lerp(target, current, Math.exp(-elapsed));
 
