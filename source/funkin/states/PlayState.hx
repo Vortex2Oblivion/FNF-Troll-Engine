@@ -289,9 +289,6 @@ class PlayState extends MusicBeatState
 	/** metadata for the songs (artist, charter, etc) **/
 	public var metadata:SongMetadata;
 
-	public var stats:Stats;
-	public var noteHits:Array<Float> = [];
-
 	public var trackMap = new Map<String, FlxSound>();
 	public var tracks:Array<FlxSound> = [];
 
@@ -450,6 +447,9 @@ class PlayState extends MusicBeatState
 	private var buttonsArray:Array<Array<FlxGamepadInputID>>;
 
 	////
+	public var stats:Stats;
+	public var noteHits:Array<Float> = [];
+
 	public var songHits:Int = 0;
 	public var songMisses:Int = 0;
 
@@ -3269,7 +3269,12 @@ class PlayState extends MusicBeatState
 		RecalculateRating();
 	}
 
-	// You didn't hit the key and let it go offscreen, also used by Hurt Notes
+	/**
+		You didn't hit the key and let it go offscreen, also used by Hurt Notes
+		@param daNote Note that was missed
+		@param field Field where the note was missed on
+		@param mine Whether this function is called as a result of a "Miss Mine" / "Hurt Note"
+	**/
 	function noteMiss(daNote:Note, field:PlayField, mine:Bool=false):Void
 	{
 		// Dupe note remove
