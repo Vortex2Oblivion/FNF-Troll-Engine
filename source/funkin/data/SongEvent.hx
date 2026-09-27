@@ -294,7 +294,7 @@ class DefaultSongEvent extends SongEvent {
 					game.songSpeed = newValue;
 				else{
 					@:privateAccess
-					game.songSpeedTween = FlxTween.num(
+					game.songSpeedTween = game.tweenManager.num(
 						game.songSpeed, newValue, val2, 
 						{
 							ease: FlxEase.linear, 

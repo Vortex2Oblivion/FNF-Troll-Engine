@@ -38,6 +38,7 @@ import funkin.scripts.*;
 import flixel.*;
 import flixel.util.*;
 import flixel.util.FlxSignal;
+import flixel.util.FlxTimer;
 import flixel.math.*;
 import flixel.tweens.FlxTween;
 import flixel.tweens.FlxEase;
@@ -427,6 +428,9 @@ class PlayState extends MusicBeatState
 	public var curCountdown:Countdown;
 	public var songSpeedTween:FlxTween;
 
+	public var timerManager:FlxTimerManager;
+	public var tweenManager:FlxTweenManager;
+
 	public var introAlts:Array<Null<String>> = ["onyourmarks", 'ready', 'set', 'go'];
 	public var introSnds:Array<Null<String>> = ["intro3", 'intro2', 'intro1', 'introGo'];
 	public var introSoundsSuffix:String = '';
@@ -480,9 +484,11 @@ class PlayState extends MusicBeatState
 	public var signals = new PlayStateSignals();
 
 	// used by lua scripts
+	#if ALLOW_DEPRECATION
 	public var modchartTweens:Map<String, FlxTween> = new Map();
 	public var modchartTimers:Map<String, FlxTimer> = new Map();
 	public var modchartSounds:Map<String, FlxSound> = new Map();
+	#end
 
 	public var notetypeScripts:Map<String, FunkinHScript> = []; // custom notetypes for scriptVer '1'
 	public var eventManager = new funkin.data.SongEvent.SongEventManager();
@@ -671,6 +677,13 @@ class PlayState extends MusicBeatState
 			instakillOnMiss = true;
 		}
 		//saveScore = !cpuControlled;
+
+		////
+		timerManager = new FlxTimerManager();
+		add(timerManager);
+
+		tweenManager = new FlxTweenManager();
+		add(tweenManager);
 
 		//// Camera shit
 		camGame = new FlxCamera();
@@ -2685,7 +2698,8 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.noteOffset <= 0 || ignoreNoteOffset) {
 			finishCallback();
 		}else {
-			finishTimer = new FlxTimer().start(ClientPrefs.noteOffset / 1000, (_) -> finishCallback());
+			finishTimer = newTimer();
+			finishTimer.start(ClientPrefs.noteOffset / 1000, (_) -> finishCallback());
 		}
 	}
 
@@ -3697,6 +3711,10 @@ class PlayState extends MusicBeatState
 		#end
 	}
 
+	public function newTimer():FlxTimer
+		return new FlxTimer(timerManager);
+
+	#if ALLOW_DEPRECATION
 	public function cancelTween(tag:String) {
 		if (modchartTweens.exists(tag)) {
 			var twn = modchartTweens.get(tag);
@@ -3714,6 +3732,7 @@ class PlayState extends MusicBeatState
 			modchartTimers.remove(tag);
 		}
 	}
+	#end
 
 	#if HSCRIPT_ALLOWED
 	public function setDefaultHScripts(variable:String, arg:Dynamic){
@@ -3799,8 +3818,6 @@ class PlayState extends MusicBeatState
 
 		Conductor.pauseSong();
 
-		if (finishTimer != null && !finishTimer.finished)
-			finishTimer.active = false;
 		if (songSpeedTween != null)
 			songSpeedTween.active = false;
 
@@ -3812,12 +3829,14 @@ class PlayState extends MusicBeatState
 			}
 		}
 
+		#if ALLOW_DEPRECATION
 		for (tween in modchartTweens) {
 			tween.active = false;
 		}
 		for (timer in modchartTimers) {
 			timer.active = false;
 		}
+		#end
 
 		updateSongDiscordPresence();
 
@@ -3836,8 +3855,6 @@ class PlayState extends MusicBeatState
 			Conductor.resumeSong();
 		}
 
-		if (finishTimer != null && !finishTimer.finished)
-			finishTimer.active = true;
 		if (songSpeedTween != null)
 			songSpeedTween.active = true;
 
@@ -3848,12 +3865,14 @@ class PlayState extends MusicBeatState
 			}
 		}
 
+		#if ALLOW_DEPRECATION
 		for (tween in modchartTweens) {
 			tween.active = true;
 		}
 		for (timer in modchartTimers) {
 			timer.active = true;
 		}
+		#end
 
 		updateSongDiscordPresence();
 
