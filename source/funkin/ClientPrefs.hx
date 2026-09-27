@@ -946,8 +946,8 @@ class ClientPrefs {
 			}
 		}
 
-		FlxU.clearArraySoft(keyDirections);
-		FlxU.clearArraySoft(buttonDirections);
+		keyDirections.resize(0);
+		buttonDirections.resize(0);
 
 		defaultKeys = keyBinds.copy();
 		defaultButtons = buttonBinds.copy();
