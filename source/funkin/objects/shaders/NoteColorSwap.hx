@@ -51,11 +51,11 @@ class NoteColorSwapShader extends ColorSwapShader {
 	@:glVertexBody("
 		#pragma body
 		
-		mat4  transform = openfl_Matrix * mat4(
-			vec4( tX.x, tX.y, tX.z, 0.0 ),
-			vec4( tY.x, tY.y, tY.z, 0.0 ),
-			vec4( tZ.x, tZ.y, tZ.z, 0.0 ),
-			vec4( tT.x, tT.y, tT.z, 1.0 ));
+		mat4 transform = openfl_Matrix * mat4(
+			vec4(tX, 0.0),
+			vec4(tY, 0.0),
+			vec4(tZ, 0.0),
+			vec4(tT, 1.0));
 			
 		gl_Position = transform * openfl_Position;
 	")
