@@ -2416,10 +2416,7 @@ class PlayState extends MusicBeatState
 				openChartEditor();
 
 			}else if (FlxG.keys.anyJustPressed(debugKeysCharacter)) {
-				TransitionableState.skipNextTransOut = true;
-				persistentUpdate = false;
-				pause();
-				MusicBeatState.switchState(new CharacterEditorState(SONG.player2));
+				openCharacterEditor();
 
 			}else if (canReset && !inCutscene && controls.RESET) {
 				// RESET = Quick Game Over Screen
@@ -2472,6 +2469,15 @@ class PlayState extends MusicBeatState
 			_chartEditor.songPosition = Conductor.songPosition;
 		}
 		MusicBeatState.switchState(new ChartingState(SONG));
+	}
+
+	function openCharacterEditor()
+	{
+		TransitionableState.skipNextTransOut = true;
+		persistentUpdate = false;
+		pause();
+		
+		MusicBeatState.switchState(new CharacterEditorState(SONG.player2));
 	}
 
 	/**
