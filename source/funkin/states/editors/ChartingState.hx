@@ -61,7 +61,6 @@ using Lambda;
 
 typedef ChartingStateOptions = {
 	var ?autosave:String;
-	var ignoreWarnings:Bool;
 	var showHistoryDisplay:Bool;
 	var vortex:Bool;
 	var mouseScrollingQuant:Bool;
@@ -111,7 +110,6 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 
 	public static function getDefaultOptions():ChartingStateOptions return {
 		autosave: null,
-		ignoreWarnings: false,
 		showHistoryDisplay: true,
 		vortex: false,
 		mouseScrollingQuant: false,
@@ -946,7 +944,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 	}
 
 	function showWarning(text:String, ?onAccept:Void->Void) {
-		if (options.ignoreWarnings) {
+		if (FlxG.keys.pressed.SHIFT) {
 			if (onAccept != null) onAccept();
 		}else {
 			showPopup(text, onAccept);
@@ -1941,14 +1939,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 		////
 		var yPos = startY + 120 + 30;
 
-		var check_warnings = new FlxUICheckBox(col1X, yPos, null, null, "Ignore Progress Warnings", 100);
-		check_warnings.callback = function()
-		{
-			options.ignoreWarnings = check_warnings.checked;
-		};
-		check_warnings.checked = options.ignoreWarnings;
-
-		var disableAutoScrolling = new FlxUICheckBox(col2X, yPos, null, null, "Disable Section Autoscroll", 120);
+		var disableAutoScrolling = new FlxUICheckBox(col1X, yPos, null, null, "Disable Section Autoscroll", 120);
 		disableAutoScrolling.callback = () -> {options.noAutoScroll = disableAutoScrolling.checked;}
 		disableAutoScrolling.checked = options.noAutoScroll == true;
 
@@ -1973,8 +1964,6 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 		////
 		tab_group_chart.add(sliderHitVol);
 		tab_group_chart.add(sliderRate);
-
-		tab_group_chart.add(check_warnings);
 
 		tab_group_chart.add(playSoundEvents);
 		tab_group_chart.add(playSoundDad);
