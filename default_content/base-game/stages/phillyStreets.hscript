@@ -304,10 +304,12 @@ function onBeatHit(){
 
 // debug shit!!! keeping it here just in case
 function visualizePath(path) {
+	/*
 	for(point in path){
 		var debug:FlxSprite = new FlxSprite(point.x - 5, point.y - 5).makeGraphic(10, 10, 0xFFFF0000);
 		add(debug);
 	}
+	*/
 }
 
 function pauseTween(tween:FlxTween):Void
