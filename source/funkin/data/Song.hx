@@ -25,7 +25,7 @@ abstract class Song
 		this.packId = packId;
 	}
 
-	public inline function play(chartId:String = ''):Void
+	public function play(chartId:String = ''):Void
 		playSong(this, chartId);
 
 	public function toString():String
