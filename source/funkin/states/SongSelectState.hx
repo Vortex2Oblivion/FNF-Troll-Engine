@@ -27,8 +27,8 @@ class SongSelectState extends funkin.states.base.DebugListState
 		var songList:Array<Song> = [];
 
 		for (contentId in Paths.packList){
-			var folder = Paths.packMap.get(contentId);
-			for (song in folder.getSongs())
+			var pack = Paths.packMap.get(contentId);
+			for (song in pack.songs)
 				songList.push(song);
 		}
 

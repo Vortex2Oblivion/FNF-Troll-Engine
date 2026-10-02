@@ -17,20 +17,22 @@ class ContentFolder extends Pack {
 		this.dependencies = metaJson.dependencies ?? [];
 		if (metaJson.bgColor is String)
 			metaJson.bgColor = CoolUtil.colorFromString(cast metaJson.bgColor);
+
+		populateSongList();
 	}
 
-	override function getSongs():Array<Song> {
-		var songList:Array<Song> = [];
+	override function unload() {
+		songs.resize(0);
+	}
 
+	function populateSongList() {
 		var songsPath = '$path/songs/';
 		for (folderName in Paths.readDirectory(songsPath)) {
 			if (Paths.isDirectory(songsPath + folderName)) {
 				// trace(songList.length, folderName);
-				songList.push(new FNFSong(folderName, this.id));
+				songs.push(new FNFSong(folderName, this.id));
 			}
 		}
-
-		return songList;
 	}
 
 	override function getFreeplaySongs():Array<Song> {
@@ -59,7 +61,7 @@ class ContentFolder extends Pack {
 			}
 		}else {
 			// Otherwise, add every song belonging to the mod.
-			for (song in this.getSongs()) {
+			for (song in this.songs) {
 				if (!songIdMap.exists(song.songId)) {
 					songIdMap.set(song.songId, true);
 					list.push(song);

@@ -34,6 +34,11 @@ class Pack {
 
 	public var metadata:PackMetadata = {};
 
+	/** 
+		An array of every Song instance belonging to this Pack.
+	**/
+	public final songs:Array<Song> = [];
+
 	public final extraData = new Map<String, Dynamic>();
 
 	public function new(id:String, path:String) {
@@ -62,10 +67,6 @@ class Pack {
 
 	public inline function getPath(key:String):String
 		return '$path/$key'; 
-
-	/** Returns a list EVERY song belonging to this AssetFolder **/
-	public function getSongs():Array<Song>
-		return [];
 
 	/** Returns a list of songs to be displayed in the freeplay menus **/
 	public function getFreeplaySongs():Array<Song>
