@@ -128,11 +128,6 @@ class FNFSong extends Song
 		return CoolUtil.stringSort(defaultDifficultyOrdering, a.toLowerCase(), b.toLowerCase());
 	}
 
-	/** Return an array of strings related to the song's credits **/
-	public inline static function getMetadataInfo(metadata:SongMetadata):Array<String> {
-		return ChartData.getMetadataInfo(metadata);
-	}
-
 	/** Loads a singular song to be played on PlayState **/
 	public inline static function loadSong(song:Song, chartId:String = "") {
 		PlayState.loadPlaylist([song], song.getChartId(chartId));
