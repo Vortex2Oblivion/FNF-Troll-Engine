@@ -3,6 +3,9 @@ package funkin.data.content;
 import funkin.data.content.PackManager;
 import flixel.util.FlxColor;
 
+/** 
+	Base class for asset folders
+**/
 class Pack {
 	/** Internal ID used by the engine **/
 	public final id:String;
@@ -14,16 +17,6 @@ class Pack {
 	public var runsGlobally:Bool = false;
 
 	/** 
-		List of pack id's that this pack depends on.  
-		Will throw an error if any of the dependencies aren't loaded when this pack is loaded.
-	**/
-	public var dependencies:Array<String> = [];
-
-	public var metadata:PackMetadata = {};
-
-	public final extraData = new Map<String, Dynamic>();
-
-	/** 
 		Whether this pack has been successfully loaded by `PackManager`.  
 		If an error occured, this will be false and the error will be stored in `loadException`.
 	**/
@@ -32,6 +25,16 @@ class Pack {
 
 	/** If this pack threw an exception during loading, it will be stored here. **/
 	public var loadException:String = '';
+
+	/** 
+		List of pack id's for this pack's dependencies.  
+		An exception will be thrown if any of the dependencies are missing when it's time to load this pack.
+	**/
+	public var dependencies:Array<String> = [];
+
+	public var metadata:PackMetadata = {};
+
+	public final extraData = new Map<String, Dynamic>();
 
 	public function new(id:String, path:String) {
 		this.id = id;
