@@ -626,7 +626,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 			var ss = new SongSelectState();
 			ss.bgColor = FlxColor.fromRGB(0,0,0,240);
 			ss.onSelectChart = function(song:Song, chartId:String) {
-				FNFSong.loadSong(song, chartId);
+				Song.loadSong(song, chartId);
 				_song = PlayState.SONG;
 				ss.close();
 				onChartLoaded();
@@ -3169,7 +3169,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 		ss.curSelected = CoolUtil.indexOfSong(ss.songs, PlayState.song);
 		if (ss.curSelected == -1) ss.curSelected = 0;
 		ss.onSelectChart = function(song:Song, chartId:String) {
-			FNFSong.loadSong(song, chartId);
+			Song.loadSong(song, chartId);
 			_song = PlayState.SONG;
 			if (this.songId == song.songId) {
 				_session ??= makeSession();

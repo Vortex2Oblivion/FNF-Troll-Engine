@@ -1,7 +1,5 @@
 package funkin.data;
 
-import funkin.states.LoadingState;
-import funkin.states.PlayState;
 import funkin.data.ChartData;
 import funkin.data.Song;
 import haxe.io.Path;
@@ -95,9 +93,6 @@ class FNFSong extends Song
 	public function getCharts():Array<String>
 		return _charts ?? (_charts = _getCharts());
 
-	public inline function play(chartId:String = ''):Void
-		FNFSong.playSong(this, chartId);
-
 	private function _getCharts():Array<String>
 	{		
 		final songPath = getSongFile("");
@@ -119,6 +114,7 @@ class FNFSong extends Song
 		return chartNames;
 	}
 
+	////
 	public inline static function getDifficultyFileSuffix(diff:String) {
 		diff = Paths.formatToSongPath(diff);
 		return (diff=="" || diff=="normal") ? "" : '-$diff';
@@ -126,25 +122,5 @@ class FNFSong extends Song
 
 	public inline static function sortChartDifficulties(a:String, b:String) {
 		return CoolUtil.stringSort(defaultDifficultyOrdering, a.toLowerCase(), b.toLowerCase());
-	}
-
-	/** Loads a singular song to be played on PlayState **/
-	public inline static function loadSong(song:Song, chartId:String = "") {
-		PlayState.loadPlaylist([song], song.getChartId(chartId));
-	}
-
-	/** Loads a singular song to be played on PlayState, then switches to it **/
-	public inline static function playSong(song:Song, chartId:String = "")
-	{
-		loadSong(song, chartId);
-		switchToPlayState();
-	}
-
-	public inline static function switchToPlayState()
-	{
-		if (FlxG.sound.music != null)
-			FlxG.sound.music.volume = 0;
-
-		LoadingState.loadAndSwitchState(new PlayState());
 	}
 }

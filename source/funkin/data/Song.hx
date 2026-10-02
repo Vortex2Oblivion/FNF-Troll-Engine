@@ -2,6 +2,8 @@ package funkin.data;
 
 import funkin.data.ChartData.SongMetadata;
 import funkin.data.ChartData.SwagSong;
+import funkin.states.LoadingState;
+import funkin.states.PlayState;
 import flixel.system.FlxAssets.FlxSoundAsset;
 
 inline final DEFAULT_CHART_ID = "normal";
@@ -22,6 +24,9 @@ abstract class Song
 		this.songId = songId;
 		this.packId = packId;
 	}
+
+	public inline function play(chartId:String = ''):Void
+		playSong(this, chartId);
 
 	public function toString():String
 		return '$packId:$songId';
@@ -66,5 +71,26 @@ abstract class Song
 	public function getTrackSound(trackName:String):FlxSoundAsset
 	{
 		return Paths.returnSound(this.getSongFile(trackName + "." + Paths.SOUND_EXT));
+	}
+
+	////
+	/** Loads a singular song to be played on PlayState **/
+	public inline static function loadSong(song:Song, chartId:String = "") {
+		PlayState.loadPlaylist([song], song.getChartId(chartId));
+	}
+
+	/** Loads a singular song to be played on PlayState, then switches to it **/
+	public inline static function playSong(song:Song, chartId:String = "")
+	{
+		loadSong(song, chartId);
+		switchToPlayState();
+	}
+
+	public inline static function switchToPlayState()
+	{
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.volume = 0;
+
+		LoadingState.loadAndSwitchState(new PlayState());
 	}
 }
