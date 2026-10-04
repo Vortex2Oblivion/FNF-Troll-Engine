@@ -52,20 +52,26 @@ class ContentFolder extends Pack {
 
 		var rawList:Null<String> = Paths.getContent('$path/data/freeplaySongList.txt');
 		if (rawList != null) {
-			// If `data/freeplaySongList.txt` only add songs within the list.
+			// If `data/freeplaySongList.txt` exists then only add songs within the list.
 			for (songId in CoolUtil.listFromString(rawList)) {
-				if (!songIdMap.exists(songId)) {
-					songIdMap.set(songId, true);
-					list.push(new FNFSong(songId, this.id));
-				}
+				if (songIdMap.exists(songId))
+					continue;
+				
+				var song = Song.get(songId, this.id);
+				if (song == null)
+					continue;
+
+				songIdMap.set(songId, true);
+				list.push(song);
 			}
 		}else {
 			// Otherwise, add every song belonging to the mod.
 			for (song in this.songs) {
-				if (!songIdMap.exists(song.songId)) {
-					songIdMap.set(song.songId, true);
-					list.push(song);
-				}
+				if (songIdMap.exists(song.songId))
+					continue;
+				
+				songIdMap.set(song.songId, true);
+				list.push(song);
 			}
 		}
 		

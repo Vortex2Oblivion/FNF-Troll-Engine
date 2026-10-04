@@ -127,6 +127,10 @@ class PackManager {
 			packList.push(pack.id);
 		}
 
+		for (pack in loadList) {
+			pack.postLoad();
+		}
+
 		trace('packList $packList');
 		trace('globalPacks: $globalPacks');
 	}

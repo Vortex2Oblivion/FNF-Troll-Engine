@@ -10,6 +10,18 @@ inline final DEFAULT_CHART_ID = "normal";
 
 abstract class Song
 {
+	public static function get(songId:String, packId:String):Null<Song> {
+		var pack = funkin.data.content.PackManager.packMap.get(packId);
+		if (pack != null) {
+			for (song in pack.songs) {
+				if (song.songId == songId)
+					return song;
+			}
+		}
+		trace('Song.get($songId, $packId) returned null');
+		return null;
+	}
+
 	public final songId:String;
 	public final packId:String;
 

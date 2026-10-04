@@ -43,7 +43,14 @@ class Level {
 		level.id = id ?? json?.id;
 		level.packId = packId;
 		level.songList = json?.songs ?? ["Test"];
-		level.songs = [for (songId in level.songList) new FNFSong(songId, packId)];
+		
+		level.songs = [];
+		for (songId in level.songList) {
+			var song = Song.get(songId, packId);
+			if (song != null)
+				level.songs.push(song);
+		}
+
 		level.difficulties = json?.difficulties ?? level.difficulties;
 		level.name = json?.name ?? "NAME DOESNT EXIST IDIOT";
 		level.asset = json?.asset ?? "storymenu/titles/week1";

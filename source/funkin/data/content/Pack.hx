@@ -51,6 +51,9 @@ class Pack {
 
 	public function load():Void
 		return;
+
+	public function postLoad():Void
+		return;
 	
 	public function unload():Void
 		return;
