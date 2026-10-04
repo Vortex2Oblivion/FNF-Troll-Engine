@@ -40,6 +40,17 @@ private inline function getRefreshRate() {
 @:build(funkin.macros.OptionMacro.build())
 #end
 class ClientPrefs {
+	/**	
+		You can force the value of an option by declaring it outside of the option definitions  
+		This will also remove it from the options menu.  
+
+		For example:  
+		```
+		public static inline final directionalCam = false;
+		public static inline final ghostTapping = false;
+		```
+	**/ /** **/
+
 	#if !USE_EPIC_JUDGEMENT
 	public static inline final useEpics:Bool = false;
 	public static inline final epicWindow:Float = -1;
@@ -49,14 +60,6 @@ class ClientPrefs {
 	public static inline final multicoreLoading:Bool = false;
 	#end
 
-	/*	
-		* You can force the value of an option by declaring it outside of the option definitions
-		* This will also remove it from the options menu.
-
-		* For example:
-		// public static inline final directionalCam = false;
-		// public static inline final ghostTapping = false;
-	 */
 	static var defaultOptionDefinitions = getOptionDefinitions();
 	static var manualLoads = ["gameplaySettings", "quantHSV", "arrowHSV", "comboOffset", "ratingPlacement"];
 
