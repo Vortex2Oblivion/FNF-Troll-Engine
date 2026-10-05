@@ -426,6 +426,10 @@ class Paths
 		return null;
 	}
 
+	public static function getAtlas(key:String, ?pack:String, allowGPU:Bool = true):FlxAtlasFrames {
+		return Paths.sparrowAtlas(key, pack, allowGPU) ?? Paths.asepriteAtlas(key, pack, allowGPU) ?? Paths.packerAtlas(key, pack, allowGPU);
+	}
+
 	inline static public function sparrowAtlas(key:String, ?library:String, allowGPU:Bool = true):FlxAtlasFrames
 	{
 		var rawXml = Paths.getContent(getPath('images/$key.xml'));
