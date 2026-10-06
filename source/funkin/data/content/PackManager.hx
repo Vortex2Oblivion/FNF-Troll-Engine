@@ -51,7 +51,7 @@ class PackManager {
 			readList.push(currentPack);
 		}
 		readList.reverse();
-		trace('readList: $readList');
+		//trace('readList: $readList');
 	}
 
 	public static function reloadPackList()
@@ -233,6 +233,7 @@ class PackManager {
 		if (currentPack != v) {
 			currentPack = v;
 			currentPackId = (v == null) ? '' : v.id;
+			trace('Set currentPack to $v');
 			refreshReadList();
 		}
 
