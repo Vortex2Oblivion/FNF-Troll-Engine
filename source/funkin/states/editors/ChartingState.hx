@@ -2478,6 +2478,15 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 		return daPos;
 	}
 
+	function getSectionStartStep(sec:Int):Float
+	{
+		var daStep:Float = 0;
+		for (i in 0...sec)			
+			daStep += getSectionBeats(i) * 4;
+
+		return daStep;
+	}
+
 	inline function sectionStartTime(add:Int = 0):Float
 		return getSectionStartTime(curSection + add);
 	
@@ -3062,7 +3071,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 		}
 
 		inline function placeGridObject() {
-			var noteTime:Float = sectionStartTime() + getStrumTime(dummyArrow.y * (getSectionBeats(curSection) / 4), false);
+			var noteTime:Float = gridPosToTime(dummyArrow.y);
 			var column:Int = Math.floor(FlxG.mouse.x / GRID_SIZE) - 1;
 			(column < 0) ? addEvent(noteTime) : addNote(noteTime, column, null, true);
 		}
@@ -3225,9 +3234,14 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 		doUpdateGridObjects = true;
 	} 
 
+	/** The length of the current section, in beats **/
 	var currentSectionBeats:Float = 0;
+	/** The step at which the current section starts**/
+	var currentSectionStartStep:Float = 0;
 
+	/** The time at which the current section starts **/
 	var currentSectionStart:Float = 0;
+	/** The time at which the current section ends **/
 	var currentSectionEnd:Float = 0;
 
 	/** Creates the currently visible sections grid background and their objects (notes, events, waveform) **/
@@ -3265,6 +3279,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 
 		// current section grid
 		currentSectionBeats = getSectionBeats(curSection);
+		currentSectionStartStep = getSectionStartStep(curSection);
 		{
 			var gridHeight:Int = Math.floor(currentSectionBeats * 4 * zoomList[curZoom]); 
 			
@@ -3340,9 +3355,22 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 			doUpdateWaveform = true;
 	}
 
+	public function timeToGridPos(time:Float):Float
+	{
+		return gridBG.y + GRID_SIZE * zoomList[curZoom] * (Conductor.getStep(time) - currentSectionStartStep);
+	}
+
+	public function gridPosToTime(yPos:Float):Float
+	{
+		// steps since section start
+		var posSteps = currentSectionStartStep + (yPos - gridBG.y) / (GRID_SIZE * zoomList[curZoom]);
+		var data = Conductor.getBPMFromStep(posSteps);
+		return data.songTime + data.stepCrochet * (posSteps - data.stepTime);
+	}
+
 	function strumLineUpdateY()
 	{
-		strumLine.y = getYfromStrum((Conductor.songPosition - currentSectionStart) / zoomList[curZoom] % (Conductor.stepCrochet * 16)) / (currentSectionBeats / 4);
+		strumLine.y = timeToGridPos(Conductor.songPosition);
 		camPos.y = strumLine.y;
 	}
 
@@ -3873,22 +3901,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 	}
 
 	inline function getNoteY(strumTime:Float, sectionNumber:Int):Float
-		return getYfromStrumNotes(calcY(strumTime) - getSectionStartTime(curSection), getSectionBeats(sectionNumber));
-
-	public static function calcY(strumTime:Float = 0) {
-        var map:BPMChangeEvent;
-        var crochet:Float;
-        if (Conductor.songPosition <= strumTime) {
-            map = Conductor.getBPMFromSeconds(strumTime);
-            crochet = Conductor.calculateCrochet(map.bpm);
-        }
-        else {
-            map = Conductor.getBPMFromSeconds(Conductor.songPosition);
-            crochet = Conductor.calculateCrochet(Conductor.getBPMFromSeconds(strumTime).bpm);
-        }
-        
-        return map.songTime + ((strumTime - map.songTime) / crochet * Conductor.crochet);
-    }
+		return timeToGridPos(strumTime);
 
 	function setupEventData(i:PsychEventNote, sectionNumber:Int) {
 		var note:Note = new Note(i.strumTime, -1, null, -1, 0, true, hudSkin);
@@ -4090,22 +4103,7 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 			undo();
 	}
 
-	////
-	function getStrumTime(yPos:Float, doZoomCalc:Bool = true):Float
-	{
-		var leZoom:Float = doZoomCalc ? zoomList[curZoom] : 1;
-		return FlxMath.remapToRange(yPos, gridBG.y, (gridBG.y + gridBG.height * leZoom), 0, 16 * Conductor.stepCrochet);
-	}
-
-	function getYfromStrum(strumTime:Float, doZoomCalc:Bool = true):Float
-	{
-		var leZoom:Float = doZoomCalc ? zoomList[curZoom] : 1;
-		return FlxMath.remapToRange(strumTime, 0, 16 * Conductor.stepCrochet, gridBG.y, (gridBG.y + gridBG.height * leZoom));
-	}
-	
-	inline function getYfromStrumNotes(strumTime:Float, beats:Float):Float
-		return gridBG.y + (strumTime / Conductor.stepCrochet) * GRID_SIZE * zoomList[curZoom];
-
+	////	
 	function clearNotes() {
 		for (sec in 0..._song.notes.length)
 			_song.notes[sec].sectionNotes.resize(0);
