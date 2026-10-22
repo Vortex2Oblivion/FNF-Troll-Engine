@@ -4701,7 +4701,9 @@ private class SeparateSubEventAction extends AddEventNoteAction {
 	override function redo() {
 		var subEvents = ogEventData.subEventsData.splice(subEventIdx, 1);
 
-		eventData = PsychEventNote.fromValues(ogEventData.strumTime, subEvents);
+		this.eventData = PsychEventNote.fromValues(ogEventData.strumTime, subEvents);
+		this.newSelected.array[0] = eventData;
+
 		super.redo();
 	}
 
