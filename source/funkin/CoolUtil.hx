@@ -98,6 +98,37 @@ class CoolUtil {
 		];
 	}
 
+	public static function getCommonStringsStart(strings:Array<String>):String {
+		var commonCharacters:Int = 0;
+		var longest:String = "";
+
+		for (str in strings) {
+			var l = str.length;
+			if (l > commonCharacters) {
+				commonCharacters = l;
+				longest = str;
+			}
+		}
+
+		for (str1 in strings) {
+			for (str2 in strings) {
+				var commonCharacters2:Int = 0;
+
+				for (i in 0...str1.length) {
+					if (str1.fastCodeAt(i) == str2.fastCodeAt(i))
+						commonCharacters2++;
+					else
+						break;
+				}
+
+				if (commonCharacters2 < commonCharacters)
+					commonCharacters = commonCharacters2;
+			}
+		}
+
+		return longest.substr(0, commonCharacters);
+	}
+
 	public static function alphabeticalSort(a:String, b:String):Int {
 		// https://haxe.motion-twin.narkive.com/BxeZgKeh/sort-an-array-string-alphabetically
 		a = a.toLowerCase();

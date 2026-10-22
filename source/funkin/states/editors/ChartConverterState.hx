@@ -126,37 +126,6 @@ class ChartConverterState extends funkin.states.base.CustomFlxUIState
 		infoText.text = str;
 	}
 
-	static function getCommonStringsStart(strings:Array<String>):String {
-		var commonCharacters:Int = 0;
-		var longest:String = "";
-
-		for (str in strings) {
-			var l = str.length;
-			if (l > commonCharacters) {
-				commonCharacters = l;
-				longest = str;
-			}
-		}
-
-		for (str1 in strings) {
-			for (str2 in strings) {
-				var commonCharacters2:Int = 0;
-
-				for (i in 0...str1.length) {
-					if (str1.charCodeAt(i) == str2.charCodeAt(i))
-						commonCharacters2++;
-					else
-						break;
-				}
-
-				if (commonCharacters2 < commonCharacters)
-					commonCharacters = commonCharacters2;
-			}
-		}
-
-		return longest.substr(0, commonCharacters);
-	}
-
 	override function getEvent(id:String, sender:Dynamic, data:Dynamic, ?params:Array<Dynamic>)
 	{
 		//trace(id,data);
@@ -257,7 +226,7 @@ class ChartConverterState extends funkin.states.base.CustomFlxUIState
 			//chartPaths.sort((a:String,b:String) -> a.length-b.length);
 
 			var fileNames:Array<String> = [for (path in chartPaths) new Path(path).file];
-			var songName:String = getCommonStringsStart(fileNames);
+			var songName:String = CoolUtil.getCommonStringsStart(fileNames);
 			
 			for (i in 0...chartPaths.length) 
 			{
