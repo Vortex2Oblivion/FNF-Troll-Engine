@@ -4525,7 +4525,7 @@ private class HistoryDisplay extends FlxSpriteGroup {
 		final indices:Array<Int> = [];
 
 		for (i => action in utRay) {
-			if (!action.silent)
+			if (action?.silent == true)
 				indices.push(i);
 		}
 
