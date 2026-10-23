@@ -4526,6 +4526,10 @@ private class HistoryDisplay extends FlxSpriteGroup {
 	public var curIdx:Int = -1;
 	public var scrollIdx:Int = 0;
 
+	public var windowBorder:FlxSprite;
+	public var titleBar:FlxSprite;
+	public var titleTxt:FlxText;
+
 	public var bgs:Array<FlxSprite> = [];
 	public var txts:Array<FlxText> = [];
 
@@ -4533,10 +4537,25 @@ private class HistoryDisplay extends FlxSpriteGroup {
 		super(x, y);
 		scrollFactor.set();
 
+		////
+		windowBorder = new FlxSprite();
+		add(windowBorder);
+
+		titleBar = CoolUtil.blankSprite(uaWidth, 20, 0xFF1B2127);
+		titleBar.scrollFactor.set();
+		titleBar.y = -20;
+		add(titleBar);
+			
+		titleTxt = new FlxText(2, titleBar.y + titleBar.height / 2, 0, 'History');
+		titleTxt.scrollFactor.set();
+		titleTxt.y -= titleTxt.height / 2;
+		add(titleTxt);
+
+		////
 		var text_hPadding = 5;
 
 		for (i in 0...displayLength) {
-			var bg = CoolUtil.blankSprite(uaWidth, uaHeight, 0xFF262626);
+			var bg = CoolUtil.blankSprite(uaWidth, uaHeight, 0xFF383A46);
 			bg.scrollFactor.set();
 			bg.y = i * uaHeight;
 			bgs[i] = bg;
@@ -4556,6 +4575,13 @@ private class HistoryDisplay extends FlxSpriteGroup {
 			txts[i] = txt;
 			add(txt);
 		}
+
+		windowBorder.x = -1;
+		windowBorder.y = -21;
+		windowBorder.frame = Paths.whitePixel;
+		windowBorder.color = FlxColor.BLACK;
+		windowBorder.scale.set(uaWidth + 2, uaHeight * displayLength + 20 + 2);
+		windowBorder.updateHitbox();
 	}
 
 	public function updateDisplay() {
