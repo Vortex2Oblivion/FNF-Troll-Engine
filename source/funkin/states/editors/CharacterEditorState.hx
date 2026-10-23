@@ -1,5 +1,7 @@
 package funkin.states.editors;
 
+import flixel.math.FlxPoint;
+import flixel.graphics.frames.FlxAtlasFrames;
 import funkin.objects.ui.ColorPicker;
 import flixel.group.FlxGroup;
 import funkin.util.FileUtil;
@@ -592,20 +594,13 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 					offsets: lastOffsets,
 					cameraOffset: [animationXCam.value, animationYCam.value]
 				};
-				if (!char.isAnimate) {
-					if (indices != null && indices.length > 0) 
-						char.animation.addByIndices(newAnim.anim, newAnim.name, newAnim.indices, "", newAnim.fps, newAnim.loop);
-					else 
-						char.animation.addByPrefix(newAnim.anim, newAnim.name, newAnim.fps, newAnim.loop);	
-				#if USING_FLXANIMATE
+
+				if (indices != null && indices.length > 0) {
+					char.animation.addByIndices(newAnim.anim, newAnim.name, newAnim.indices, "", newAnim.fps, newAnim.loop);
 				} else {
-					if (indices != null && indices.length > 0) 
-						char.anim.addBySymbolIndices(newAnim.anim, newAnim.name, newAnim.indices, newAnim.fps, newAnim.loop);
-					else 
-						char.anim.addBySymbol(newAnim.anim, newAnim.name, newAnim.fps, newAnim.loop);
-					
-				}	
-				#end
+					char.animation.addByPrefix(newAnim.anim, newAnim.name, newAnim.fps, newAnim.loop);
+				}
+
 				if (!char.animOffsets.exists(newAnim.anim))
 					char.addOffset(newAnim.anim, 0, 0);
 
@@ -961,48 +956,24 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 	function reloadCharacterImage(char:Character) {
 		var lastAnim = char.animation.name;
 
+		// I'm too lazy to check if the ghost character shares graphics with the main one
+		// So I recommend clearing image cache with SHIFT + F5 instead (Or holding SHIFT when restarting the song)
+		/*
 		try {
-			Paths.removeBitmap(char.frames.parent.key); // is null SOMETIMES idk WHY
+			var frames = cast(char.frames, FlxAtlasFrames);
+			Paths.removeBitmap(frames.parent.key);
+			@:privateAccess
+			for (graphic in frames.usedGraphics)
+				Paths.removeBitmap(graphic.key);
 		} catch (e) {
 			if (Main.showDebugTraces) {
 				trace(e.details());
 			}
 		}
-		trace(char.imageFile );
-		if (Paths.fileExists('images/' + char.imageFile + '/Animation.json', TEXT)) {
-			char.frames = Paths.animateAtlas(char.imageFile);
-		} else if (Paths.fileExists('images/' + char.imageFile + '.txt', TEXT)) {
-			char.frames = Paths.packerAtlas(char.imageFile);
-		} else {
-			char.frames = Paths.sparrowAtlas(char.imageFile);
-		}
+		*/
 
-		if (char.animationsArray != null && char.animationsArray.length > 0) {
-			for (anim in char.animationsArray) {
-				var name:String = '' + anim.anim;
-				var prefix:String = '' + anim.name;
-				var framerate:Int = anim.fps;
-				var looped:Bool = !!anim.loop; // Bruh
-				var indices:Array<Int> = anim.indices;
-
-				if (!char.isAnimate) {
-					if (indices != null && indices.length > 0)
-						char.animation.addByIndices(name, prefix, indices, "", framerate, looped);
-					else
-						char.animation.addByPrefix(name, prefix, framerate, looped);
-				}
-				#if USING_FLXANIMATE
-				else {
-					if (indices != null && indices.length > 0)
-						char.anim.addBySymbolIndices(name, prefix, indices, framerate, looped);
-					else
-						char.anim.addBySymbol(name, prefix, framerate, looped);
-				}
-				#end
-			}
-		} else {
-			char.quickAnimAdd('idle', 'BF idle dance');
-		}
+		char.loadAtlas(char.imageFile);
+		char.addAnimations();
 
 		if (lastAnim != null && char.animation.exists(lastAnim)) {
 			char.playAnim(lastAnim, true);

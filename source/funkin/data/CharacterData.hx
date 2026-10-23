@@ -122,19 +122,6 @@ class CharacterData {
 		return parsed;
 	}
 
-	/**	
-		Returns "texture", "packer" or "sparrow"
-	**/
-	public static function getImageFileType(path:String):String
-	{
-		if (Paths.fileExists('images/$path/Animation.json', TEXT))
-			return "texture";
-		else if (Paths.fileExists('images/$path.txt', TEXT))
-			return "packer";
-		else
-			return "sparrow";
-	}
-
 	public static function returnCharacterPreload(characterName:String):Array<funkin.data.Cache.AssetPreload>{
 		var char = getCharacterFile(characterName);
 

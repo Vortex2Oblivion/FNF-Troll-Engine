@@ -426,8 +426,52 @@ class Paths
 		return null;
 	}
 
-	public static function getAtlas(key:String, ?pack:String, allowGPU:Bool = true):FlxAtlasFrames {
+	public static function atlasFrames(key:String, ?pack:String, allowGPU:Bool = true):FlxAtlasFrames {
 		return Paths.sparrowAtlas(key, pack, allowGPU) ?? Paths.asepriteAtlas(key, pack, allowGPU) ?? Paths.packerAtlas(key, pack, allowGPU);
+	}
+
+	public static function multiAtlas(keys:Array<String>, ?pack:String, allowGPU:Bool = true):FlxAtlasFrames // from psych
+	{
+		if (keys.length == 0) return null;
+		
+		final firstKey:Null<String> = keys.shift()?.trim();
+		
+		if (firstKey == null) return null;
+		
+		var frames = atlasFrames(firstKey, pack, allowGPU);
+		
+		if (keys.length != 0)
+		{
+			final originalCollection = frames;
+			frames = new FlxAtlasFrames(originalCollection.parent);
+			frames.addAtlas(originalCollection, true);
+			for (i in keys)
+			{
+				final newFrames = atlasFrames(i.trim(), pack, allowGPU);
+				if (newFrames != null)
+				{
+					frames.addAtlas(newFrames, false);
+				}
+			}
+		}
+		return frames;		
+	}
+
+	/**	
+		Returns "SPARROW", "ASEPRITE", "PACKER" or "ANIMATE" or null
+	**/
+	public static function getImageFileType(path:String):Null<SpriteSheetType>
+	{
+		if (Paths.fileExists('images/$path.xml', TEXT))
+			return SPARROW;
+		else if (Paths.fileExists('images/$path.json', TEXT))
+			return ASEPRITE;
+		else if (Paths.fileExists('images/$path.txt', TEXT))
+			return PACKER;
+		else if (Paths.fileExists('images/$path/Animation.json', TEXT))
+			return ANIMATE;
+		else
+			return null;
 	}
 
 	inline static public function sparrowAtlas(key:String, ?library:String, allowGPU:Bool = true):FlxAtlasFrames
@@ -779,6 +823,13 @@ class PackPathsIterator {
 	public inline function next():{k:Pack, v:String} {
 		return {k: PackManager.readList[i++], v: PackManager.readList[i].getPath(key)};
 	}
+}
+
+enum abstract SpriteSheetType(String) from String to String {
+	var SPARROW;
+	var PACKER;
+	var ASEPRITE;
+	var ANIMATE;
 }
 
 private class AltFilePaths {

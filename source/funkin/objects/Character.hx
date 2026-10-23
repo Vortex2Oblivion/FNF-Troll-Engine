@@ -1,28 +1,34 @@
 package funkin.objects;
 
-import flixel.FlxSprite;
-import flixel.animation.FlxAnimation;
+import funkin.scripts.ScriptedClassShit.InstanceInterp;
 import flixel.graphics.frames.FlxAtlasFrames;
-import flixel.math.FlxPoint;
+import funkin.states.PlayState;
+import funkin.objects.playfields.PlayField;
+import funkin.objects.notes.Note;
+import funkin.data.CharacterData;
+import funkin.scripts.*;
+import flixel.animation.FlxAnimation;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
-import funkin.data.CharacterData.*;
-import funkin.data.CharacterData;
-import funkin.objects.notes.Note;
-import funkin.objects.playfields.PlayField;
-import funkin.scripts.*;
-import funkin.scripts.ScriptedClassShit.InstanceInterp;
-import funkin.states.PlayState;
+import flixel.math.FlxPoint;
+import flixel.FlxSprite;
 import openfl.geom.ColorTransform;
+#if USING_FLXANIMATE
+import animate.FlxAnimate;
+import animate.FlxAnimateFrames;
+import animate.FlxAnimateController;
+#end
 
-using StringTools;
 using flixel.util.FlxColorTransformUtil;
+using StringTools;
 
-class Character extends FlxSpriteExt {
+class Character extends FunkinSprite
+{
 	/**Character to use if the requested one fails to load**/
 	public static final DEFAULT_CHARACTER:String = 'bf';
 
 	////
+
 	public var scriptNames:Array<String> = [];
 
 	/**Id of the character**/
@@ -95,7 +101,7 @@ class Character extends FlxSpriteExt {
 
 	/**Index of the next animation to play on the dance sequence**/
 	public var danceIndex:Int = 0;
-
+	
 	/**How long in seconds the current sing animation has been held for**/
 	public var holdTimer:Float = 0;
 
@@ -106,8 +112,8 @@ class Character extends FlxSpriteExt {
 	public var animTimer:Float = 0;
 
 	/**
-	 * If `true`, disables dancing.
-	 * Automatically gets set to `false` if the current animation finishes.
+	 * If `true`, disables dancing.  
+	 * Automatically gets set to `false` if the current animation finishes.  
 	 *
 	 * Set this to `true` after calling `playAnim`, as this sets it to `false`.
 	**/
@@ -120,11 +126,10 @@ class Character extends FlxSpriteExt {
 	public var skipDance:Bool = false;
 
 	/**
-	 * If `true`, it stops dance and note animations from playing.
+	 * If `true`, it stops dance and note animations from playing.  
 	 * This doesn't get set back to `false` after the animation finishes.
 	**/
 	public var voicelining:Bool = false; // for fleetway, mainly
-
 	// but whenever you need to play an anim that has to be manually interrupted, here you go
 
 	/**Camera horizontal offset from the animation**/
@@ -139,7 +144,7 @@ class Character extends FlxSpriteExt {
 	/**BLAMMED LIGHTS!! idk not used anymore**/
 	public var colorTween:FlxTween;
 
-	// Used on Character Editor
+	//Used on Character Editor
 	public var animationsArray:Array<AnimArray> = [];
 	public var imageFile:String = '';
 	public var baseScale:Float = 1;
@@ -153,32 +158,22 @@ class Character extends FlxSpriteExt {
 
 	@:deprecated("curCharacter is deprecated. Use characterId instead.")
 	public var curCharacter(get, set):String;
-
-	inline function get_curCharacter()
-		return characterId;
-
-	inline function set_curCharacter(v:String)
-		return characterId = v;
-
+	inline function get_curCharacter() return characterId;
+	inline function set_curCharacter(v:String) return characterId = v;
+	
 	@:deprecated("deathName is deprecated. Use deathId instead.")
 	public var deathName(get, set):String;
-
-	inline function get_deathName()
-		return deathId;
-
-	inline function set_deathName(v:String)
-		return deathId = v;
+	inline function get_deathName() return deathId;
+	inline function set_deathName(v:String) return deathId = v;
 
 	/**LEGACY. DO NOT USE.**/
 	@:deprecated("characterScript is deprecated. Use pushScript and removeScript instead.")
 	public var characterScript(get, set):FunkinScript;
-
 	@:noCompletion
 	inline function get_characterScript()
 		return characterScripts[0];
-
 	@:noCompletion
-	function set_characterScript(script:FunkinScript) { // you REALLY shouldnt be setting characterScript, you should be using the removeScript and addScript functions though;
+	function set_characterScript(script:FunkinScript){ // you REALLY shouldnt be setting characterScript, you should be using the removeScript and addScript functions though;
 		var oldScript = characterScripts.shift(); // removes the first script
 		stopScript(oldScript, true);
 		characterScripts.unshift(script); // and replaces it w/ the new one
@@ -187,27 +182,33 @@ class Character extends FlxSpriteExt {
 	}
 	#end
 
-	override function destroy() {
-		for (script in characterScripts)
-			removeScript(script, true);
+	#if !USING_FLXANIMATE
+	@:noCompletion public var isAnimate(get, never):Bool;
+	@:noCompletion inline function get_anim() return false;
+	#end
 
+	override function destroy()
+	{
+		for(script in characterScripts)
+			removeScript(script, true);
+		
 		return super.destroy();
 	}
 
-	function loadFromPsychData(json:CharacterFile) {
+	function loadFromPsychData(json:CharacterFile)
+	{
 		//// some troll engine stuff
 
 		deathId = json.death_name != null ? json.death_name : characterId;
-
+		
 		if (json.x_facing != null)
 			xFacing *= json.x_facing;
 
 		////
 		imageFile = json.image;
-
-		var fileType:String = getImageFileType(imageFile);
-
-		loadFrames(fileType, imageFile, json.images);
+		animationsArray = json.animations;
+		loadAtlas(imageFile);
+		addAnimations();
 
 		////
 		baseScale = Math.isNaN(json.scale) ? 1.0 : json.scale;
@@ -229,45 +230,62 @@ class Character extends FlxSpriteExt {
 
 		if (json.healthbar_colors != null && json.healthbar_colors.length > 2)
 			healthColorArray = json.healthbar_colors;
+	}
 
-		animationsArray = json.animations;
-
-		if (animationsArray != null && animationsArray.length > 0) {
-			for (animData in animationsArray) {
+	public function addAnimations() {
+		if (animationsArray != null && animationsArray.length > 0)
+		{
+			// I might remove anim.image
+			if (!isAnimate) {
+				for (anim in animationsArray) {
+					if (anim.image != null && !imageFile.contains(anim.image))
+						addSubAtlas(anim.image);
+				}
+			}
+			
+			for (animData in animationsArray)
+			{
 				var animAnim:String = '' + animData.anim;
 				var animName:String = '' + animData.name;
 				var animFps:Int = animData.fps;
-				var animLoop:Bool = animData.loop == true;
+				var animLoop:Bool = animData.loop==true;
 				var animIndices:Array<Int> = animData.indices;
 				var camOffset:Null<Array<Float>> = animData.cameraOffset;
 
-				if (!debugMode) {
+				if (!debugMode)
+				{
 					camOffsets[animData.anim] = (camOffset != null) ? [camOffset[0], camOffset[1]] : CharacterData.getDefaultAnimCamOffset(animAnim);
 				}
-				if (!isAnimate) {
-					if (animIndices != null && animIndices.length > 0)
-						animation.addByIndices(animAnim, animName, animIndices, "", animFps, animLoop);
-					else
-						animation.addByPrefix(animAnim, animName, animFps, animLoop);
-				}
+
+				////
 				#if USING_FLXANIMATE
-				else {
+				if (isAnimate) {
 					if (animIndices != null && animIndices.length > 0)
 						anim.addBySymbolIndices(animAnim, animName, animIndices, animFps, animLoop);
 					else
 						anim.addBySymbol(animAnim, animName, animFps, animLoop);
 				}
+				else
 				#end
+				{
+					if (animIndices != null && animIndices.length > 0)
+						animation.addByIndices(animAnim, animName, animIndices, "", animFps, animLoop);
+					else
+						animation.addByPrefix(animAnim, animName, animFps, animLoop);
+				}
 				////
 				if (animData.offsets != null && animData.offsets.length > 1)
 					addOffset(animData.anim, animData.offsets[0], animData.offsets[1]);
 			}
-		} else {
+		}
+		else
+		{
 			quickAnimAdd('idle', 'BF idle dance');
 		}
 	}
 
-	public function new(x:Float = 0.0, y:Float = 0.0, ?characterId:String, isPlayer:Bool = false) {
+	public function new(x:Float = 0.0, y:Float = 0.0, ?characterId:String, isPlayer:Bool = false)
+	{
 		super(x, y);
 
 		this.characterId = characterId ?? DEFAULT_CHARACTER;
@@ -277,25 +295,24 @@ class Character extends FlxSpriteExt {
 		this.controlled = this.isPlayer;
 	}
 
-	function getMyCharacterFile() {
-		return getCharacterFile(characterId);
+
+	function getMyCharacterFile(){
+		return CharacterData.getCharacterFile(characterId);
 	}
 
 	function _setupCharacter() {
 		var json = getMyCharacterFile();
 		if (json == null) {
 			trace('Character file: $characterId not found.');
-			json = getCharacterFile(DEFAULT_CHARACTER);
+			json = CharacterData.getCharacterFile(DEFAULT_CHARACTER);
 			characterId = DEFAULT_CHARACTER;
 		}
-
+		
 		loadFromPsychData(json);
+		
+		hasMissAnimations = (animOffsets.exists('singLEFTmiss') && animOffsets.exists('singDOWNmiss') && animOffsets.exists('singUPmiss') && animOffsets.exists('singRIGHTmiss'));
 
-		hasMissAnimations = (animOffsets.exists('singLEFTmiss') && animOffsets.exists('singDOWNmiss') && animOffsets.exists('singUPmiss')
-			&& animOffsets.exists('singRIGHTmiss'));
-
-		if (!debugMode)
-			createPlaceholderAnims();
+		if (!debugMode) createPlaceholderAnims();
 
 		recalculateDanceIdle();
 		dance();
@@ -304,7 +321,8 @@ class Character extends FlxSpriteExt {
 		flipX = isPlayer ? !originalFlipX : originalFlipX;
 	}
 
-	public function setupCharacter() {
+	public function setupCharacter()
+	{
 		var characterScript = characterScripts[0];
 		if (characterScript != null) {
 			var characterScript:FunkinHScript = cast characterScript;
@@ -319,9 +337,9 @@ class Character extends FlxSpriteExt {
 
 	public function createPlaceholderAnims() {
 		for (animName in ["singLEFT", "singDOWN", "singUP", "singRIGHT"]) {
-			cloneAnimation(animName, animName + 'miss');
-			cloneAnimation(animName, animName + '-alt');
-			cloneAnimation(animName + '-alt', animName + '-altmiss');
+			cloneAnimation(animName, 		animName+'miss');
+			cloneAnimation(animName, 		animName+'-alt');
+			cloneAnimation(animName+'-alt',	animName+'-altmiss');
 		}
 	}
 
@@ -332,23 +350,24 @@ class Character extends FlxSpriteExt {
 		];
 
 		var scriptCam:Null<Array<Float>> = null;
-
+		
 		var retValue = callOnScripts("getCamera", [cam]);
-		if ((retValue is Array))
-			scriptCam = retValue;
+		if((retValue is Array))scriptCam = retValue;
 
-		return scriptCam != null ? scriptCam : cam;
+		return scriptCam!=null ? scriptCam : cam;
 	}
 
-	override function update(elapsed:Float) {
+	override function update(elapsed:Float)
+	{
 		if (callOnScripts("onCharacterUpdate", [elapsed]) == Globals.Function_Stop)
 			return;
-
-		if (!debugMode && animation.curAnim != null) {
+		
+		if (!debugMode && animation.curAnim != null)
+		{
 			if (animTimer > 0) {
 				animTimer -= elapsed;
-				if (animTimer <= 0) {
-					animTimer = 0;
+				if (animTimer<=0) {
+					animTimer=0;
 					dance();
 				}
 			}
@@ -361,7 +380,7 @@ class Character extends FlxSpriteExt {
 					if (specialAnim && (animation.curAnim.name == 'hey' || animation.curAnim.name == 'cheer'))
 						animation.curAnim.finish();
 				}
-			}
+			} 
 
 			if (animation.name.startsWith('sing'))
 				holdTimer += elapsed;
@@ -374,29 +393,32 @@ class Character extends FlxSpriteExt {
 				if (specialAnim) {
 					specialAnim = false;
 					dance();
-
+	
 					callOnScripts("onSpecialAnimFinished", [name]);
-				} else if (name.endsWith('miss')) {
+				}
+				else if (name.endsWith('miss')) {
 					dance();
-				} else if (animation.exists(name + '-loop')) {
+				}
+				else if (animation.exists(name + '-loop')) {
 					playAnim(name + '-loop');
-				} else if (name.startsWith("hold") && name.endsWith("Start")) {
-					var newName = name.substring(0, name.length - 5);
+				}
+				else if (name.startsWith("hold") && name.endsWith("Start")) {
+					var newName = name.substring(0, name.length-5);
 					if (animation.exists(newName)) {
-						playAnim(newName, true);
-					} else {
-						var singName = "sing" + name.substring(3, name.length - 5);
-						playAnim(singName, true);
+						playAnim(newName,true);
+					}else {
+						var singName = "sing" + name.substring(3, name.length-5);
+						playAnim(singName,true);
 					}
 				}
 			}
 		}
-
+		
 		super.update(elapsed);
 		callOnScripts("onCharacterUpdatePost", [elapsed]);
 	}
 
-	override function draw() {
+	override function draw(){
 		if (callOnScripts("onCharacterDraw") == Globals.Function_Stop)
 			return;
 		super.draw();
@@ -405,29 +427,30 @@ class Character extends FlxSpriteExt {
 
 	public var colorOverlay(default, set):FlxColor = FlxColor.WHITE;
 
-	function set_colorOverlay(val:FlxColor) {
-		if (colorOverlay != val) {
+	function set_colorOverlay(val:FlxColor){
+		if (colorOverlay!=val){
 			colorOverlay = val;
 			updateColorTransform();
 		}
 		return colorOverlay;
 	}
 
-	override function updateColorTransform():Void {
+	override function updateColorTransform():Void
+	{
 		if (colorTransform == null)
 			colorTransform = new ColorTransform();
 
 		useColorTransform = alpha != 1 || (color * colorOverlay) != 0xffffff;
 		if (useColorTransform)
-			colorTransform.setMultipliers(color.redFloat * colorOverlay.redFloat, color.greenFloat * colorOverlay.greenFloat,
-				color.blueFloat * colorOverlay.blueFloat, alpha);
+			colorTransform.setMultipliers(color.redFloat * colorOverlay.redFloat, color.greenFloat * colorOverlay.greenFloat, color.blueFloat * colorOverlay.blueFloat, alpha);
 		else
 			colorTransform.setMultipliers(1, 1, 1, 1);
 
 		dirty = true;
 	}
 
-	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void {
+	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void
+	{
 		if (callOnScripts("onAnimPlay", [AnimName, Force, Reversed, Frame]) == Globals.Function_Stop)
 			return;
 
@@ -448,11 +471,11 @@ class Character extends FlxSpriteExt {
 		var daOffset:Array<Float> = camOffsets.get(AnimName);
 		if (daOffset == null || daOffset.length < 2)
 			daOffset = camOffsets.get(AnimName.replace("-loop", ""));
-
-		if (daOffset != null && daOffset.length >= 2) {
+		
+		if (daOffset != null && daOffset.length >= 2){
 			camOffX = daOffset[0];
 			camOffY = daOffset[1];
-		} else {
+		}else{
 			camOffX = 0;
 			camOffY = 0;
 		}
@@ -460,51 +483,53 @@ class Character extends FlxSpriteExt {
 		////
 		callOnScripts("onAnimPlayed", [AnimName, Force, Reversed, Frame]);
 	}
-
-	public function dance() {
+	
+	public function dance()
+	{
 		if (debugMode || skipDance || specialAnim || animTimer > 0 || voicelining)
 			return;
-
+		
 		if (callOnScripts("onDance") == Globals.Function_Stop)
 			return;
 
 		playAnim(idleSequence[danceIndex] + idleSuffix, shouldForceDance);
-
+		
 		if (idleSequence.length > 1) {
 			danceIndex++;
 			if (danceIndex >= idleSequence.length)
 				danceIndex = 0;
 		}
-
+		
 		callOnScripts("onDancePost");
 	}
 
 	public inline function canResetDance(holdingKeys:Bool = false) {
 		var curAnim = animation.name;
-		return curAnim == null
-			|| ((!holdingKeys || idleWhenHold)
-				&& holdTimer * 1000 > Conductor.stepCrochet * singDuration
-				&& curAnim.startsWith('sing')
-				&& !curAnim.endsWith('miss') // will go back to the idle once it finishes
-			);
+		return curAnim==null || (
+			(!holdingKeys || idleWhenHold)
+			&& holdTimer * 1000 > Conductor.stepCrochet * singDuration
+			&& curAnim.startsWith('sing') 
+			&& !curAnim.endsWith('miss') // will go back to the idle once it finishes
+		);
 	}
-
-	public function resetDance() {
+	public function resetDance(){
 		// called when resetting back to idle from a pose
 		// useful for stuff like sing return animations
-		if (callOnScripts("onResetDance") != Globals.Function_Stop)
-			dance();
+		if(callOnScripts("onResetDance") != Globals.Function_Stop) dance();
 	}
 
-	inline public static function getFieldColumnSingAnimation(column:Int, field:PlayField):String {
+	inline public static function getFieldColumnSingAnimation(column:Int, field:PlayField):String
+	{
 		return field.singAnimations[column % field.singAnimations.length];
 	}
 
-	inline public static function getNoteHitAnimation(note:Note, field:PlayField):String {
+	inline public static function getNoteHitAnimation(note:Note, field:PlayField):String
+	{
 		return note.characterHitAnimName ?? getFieldColumnSingAnimation(note.column, field) + note.characterHitAnimSuffix;
 	}
 
-	inline public static function getNoteMissAnimation(note:Note, field:PlayField):String {
+	inline public static function getNoteMissAnimation(note:Note, field:PlayField):String
+	{
 		return note.characterMissAnimName ?? getFieldColumnSingAnimation(note.column, field) + note.characterMissAnimSuffix;
 	}
 
@@ -541,7 +566,7 @@ class Character extends FlxSpriteExt {
 		playAnim(animToPlay, true);
 
 		if (!hasMissAnimations)
-			colorOverlay = missOverlayColor;
+			colorOverlay = missOverlayColor;	
 	}
 
 	public function missPress(direction:Int, field:PlayField) {
@@ -550,24 +575,24 @@ class Character extends FlxSpriteExt {
 
 		var animToPlay:String = getFieldColumnSingAnimation(direction, field) + 'miss';
 		playAnim(animToPlay, true);
-
-		if (!hasMissAnimations)
-			colorOverlay = missOverlayColor;
+		
+		if(!hasMissAnimations)
+			colorOverlay = missOverlayColor;	
 	}
 
 	private var settingCharacterUp:Bool = true;
-
 	public function recalculateDanceIdle() {
 		var lastDanceIdle:Bool = danceIdle;
 		danceIdle = animation.exists('danceLeft' + idleSuffix) && animation.exists('danceRight' + idleSuffix);
 
 		if (danceIdle)
 			idleSequence = ["danceLeft" + idleSuffix, "danceRight" + idleSuffix];
-
+		
 		if (settingCharacterUp) {
 			settingCharacterUp = false;
 			danceEveryNumBeats = (danceIdle ? 1 : 2);
-		} else if (lastDanceIdle != danceIdle) {
+		}
+		else if(lastDanceIdle != danceIdle) {
 			var calc:Float = danceEveryNumBeats * (danceIdle ? 0.5 : 2.0);
 			danceEveryNumBeats = Math.round(Math.max(calc, 1));
 		}
@@ -576,17 +601,15 @@ class Character extends FlxSpriteExt {
 	/** To be called when this character is used, Used by PlayState Character Change Events **/
 	public function changedIn(prevCharacter:Null<Character>) {
 		inline function canResumeAnim(c:Character):Bool {
-			return c != null
-				&& animation.exists(c.animation.name)
-				&& (characterId.startsWith(c.characterId) || c.characterId.startsWith(characterId));
+			return c != null && animation.exists(c.animation.name) && (characterId.startsWith(c.characterId) || c.characterId.startsWith(characterId));
 		}
 		if (canResumeAnim(prevCharacter)) {
 			var animation = prevCharacter.animation.curAnim;
 			playAnim(animation.name, true, animation.reversed, animation.curFrame);
-		} else {
+		}else {
 			dance();
 		}
-
+		
 		used = true;
 		setOnScripts("used", true);
 		callOnScripts("changedIn", [prevCharacter]); // if you can come up w/ a better name for this callback then change it lol
@@ -600,28 +623,32 @@ class Character extends FlxSpriteExt {
 		callOnScripts("changedOut", [newCharacter]);
 	}
 
-	public function addOffset(name:String, x:Float = 0, y:Float = 0) {
+	public function addOffset(name:String, x:Float = 0, y:Float = 0)
+	{
 		animOffsets[name] = [x, y];
 	}
 
-	public function quickAnimAdd(name:String, animToAdd:String) {
+	public function quickAnimAdd(name:String, animToAdd:String)
+	{
 		if (!isAnimate)
 			animation.addByPrefix(name, animToAdd, 24, false);
 		#if USING_FLXANIMATE
-		else
+		else 
 			anim.addBySymbol(name, animToAdd, 24, false);
 		#end
 	}
 
 	/**
-	 * @param ogName Name of the animation to be cloned.
+	 * @param ogName Name of the animation to be cloned. 
 	 * @param cloneName Name of the resulting clone.
 	 * @param force Whether to override the resulting animation, if it exists.
 	 */
-	function cloneAnimation(ogName:String, cloneName:String, ?force:Bool) {
+	function cloneAnimation(ogName:String, cloneName:String, ?force:Bool)
+	{
 		var daAnim:FlxAnimation = animation.getByName(ogName);
 
-		if (daAnim != null && (force == true || !animation.exists(cloneName))) {
+		if (daAnim!=null && (force==true || !animation.exists(cloneName)))
+		{
 			animation.add(cloneName, daAnim.frames, daAnim.frameRate, daAnim.looped, daAnim.flipX, daAnim.flipY);
 
 			camOffsets[cloneName] = camOffsets[ogName];
@@ -630,9 +657,8 @@ class Character extends FlxSpriteExt {
 	}
 
 	////
-
 	/**
-	 * Scripts running on the character.
+	 * Scripts running on the character. 
 	 *
 	 * You should not modify this directly! Use `pushScript`/`removeScript`!
 	 *
@@ -641,57 +667,59 @@ class Character extends FlxSpriteExt {
 	public var characterScripts:Array<FunkinScript> = [];
 
 	public var defaultVars:Map<String, Dynamic> = [];
-
 	public function setDefaultVar(i:String, v:Dynamic)
 		defaultVars.set(i, v);
-
-	public function pushScript(script:FunkinScript, alreadyStarted:Bool = false) {
+	
+	public function pushScript(script:FunkinScript, alreadyStarted:Bool=false){
 		characterScripts.push(script);
 		if (!alreadyStarted)
 			startScript(script);
-	}
+	} 
 
-	public function removeScript(script:FunkinScript, destroy:Bool = false, alreadyStopped:Bool = false) {
+	public function removeScript(script:FunkinScript, destroy:Bool = false, alreadyStopped:Bool = false)
+	{
 		characterScripts.remove(script);
 		if (!alreadyStopped)
 			stopScript(script, destroy);
 	}
 
-	public function startScript(script:FunkinScript) {
+
+	public function startScript(script:FunkinScript){		
 		#if HSCRIPT_ALLOWED
 		script.call("onLoad", [this]);
 		#end
 	}
 
-	public function stopScript(script:FunkinScript, destroy:Bool = false) {
+	public function stopScript(script:FunkinScript, destroy:Bool=false){
 		#if HSCRIPT_ALLOWED
 		script.call("onStop", [this]);
-		if (destroy) {
+		if(destroy){
 			script.call("onDestroy");
 			script.stop();
 		}
 		#end
 	}
 
-	public function startScripts() {
+	public function startScripts()
+	{
 		setDefaultVar("this", this);
 		setDefaultVar("debugMode", debugMode);
 
 		#if HSCRIPT_ALLOWED
 		var json = getMyCharacterFile();
-		if (json != null) {
+		if(json != null){
+
 			if (json.script_names != null)
 				scriptNames = json.script_names;
 
-			if (json.script_name != null && !scriptNames.contains(json.script_name))
-				scriptNames.push(json.script_name);
+			if (json.script_name != null && !scriptNames.contains(json.script_name))scriptNames.push(json.script_name);
 		}
 
-		if (!scriptNames.contains(characterId))
+		if(!scriptNames.contains(characterId))
 			scriptNames.insert(0, characterId);
 
-		for (script in scriptNames) {
-			for (key in ['characters/$script', 'characters/scripts/$script']) {
+		for(script in scriptNames){
+			for (key in ['characters/$script', 'characters/scripts/$script']){
 				var hscriptFile = Paths.getHScriptPath(key);
 				if (hscriptFile != null) {
 					var script = FunkinHScript.fromFile(hscriptFile, hscriptFile, defaultVars, true, new InstanceInterp(this));
@@ -699,24 +727,28 @@ class Character extends FlxSpriteExt {
 					break;
 				}
 			}
+			
 		}
 		#end
 
 		return this;
 	}
 
-	public function callOnScripts(funcName:String, ?args:Array<Dynamic>):Dynamic {
+	public function callOnScripts(funcName:String, ?args:Array<Dynamic>):Dynamic
+	{
 		return Globals.callOnScripts(characterScripts, funcName, args);
 	}
 
-	public function setOnScripts(variable:String, value:Dynamic) {
+	public function setOnScripts(variable:String, value:Dynamic)
+	{
 		for (script in characterScripts) {
 			script.set(variable, value);
 			// trace('set $variable, $value, on ${script.scriptName}');
 		}
 	}
 
-	public function callScript(scriptName:String, funcName:String, ?args:Array<Dynamic>):Dynamic {
+	public function callScript(scriptName:String, funcName:String, ?args:Array<Dynamic>):Dynamic
+	{
 		#if (HSCRIPT_ALLOWED) // no point in calling this code if you.. for whatever reason, disabled scripting.
 		var scripts:Array<FunkinScript> = characterScripts.filter(script -> script.scriptName == scriptName);
 		return Globals.callOnScripts(scripts, funcName, args);
