@@ -3039,10 +3039,10 @@ class ChartingState extends funkin.states.base.CustomFlxUIState
 					placeGridObject();
 				else if (!FlxG.mouse.overlaps(UI_box)) 
 					startSelectionBox = true;
-			}else if (FlxG.mouse.justPressedRight) {
+			}else if (FlxG.mouse.pressedRight) {
 				if ((overlappedObj = getOverlappedNote()) != null)
 					deleteNote(overlappedObj);
-				else
+				else if (FlxG.mouse.justPressedRight)
 					deselectEverything();
 			}
 		}
