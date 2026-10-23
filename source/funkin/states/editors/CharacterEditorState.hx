@@ -25,6 +25,8 @@ import flixel.text.FlxText;
 import flixel.ui.FlxButton;
 import flixel.util.FlxColor;
 import haxe.Json;
+import lime.ui.MouseCursor;
+import lime.app.Application;
 
 using StringTools;
 
@@ -143,7 +145,7 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 	var curAnim:Int = 0;
 	var charName:String = 'pico';
 	var camFollow:FlxObject;
-
+	var editorMouse:MouseCursor;
 	public function new(charName:String = 'pico', goToPlayState:Bool = true) {
 		super();
 		this.charName = charName;
@@ -171,7 +173,6 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 
 	override function create() {
 		// FlxG.sound.playMusic(Paths.music('breakfast'), 0.5);
-
 		camEditor = new FlxCamera();
 		camEditor.bgColor = 0xFF999999;
 		camHUD = new FlxCamera();
@@ -243,7 +244,7 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 			
 			var tipTextArray = texts.split('\n');
 			for (i => str in tipTextArray) {
-				var tipText:FlxText = new FlxText(FlxG.width - 320, FlxG.height - 15 - 16 * (tipTextArray.length - i), 300, str, 12);
+				var tipText:FlxText = new FlxText(FlxG.width - 420, FlxG.height - 15 - 14 * (tipTextArray.length - i), 400, str, 12);
 				tipText.setFormat(null, 12, FlxColor.WHITE, RIGHT);
 				tipText.setBorderStyle(FlxTextBorderStyle.OUTLINE_FAST, FlxColor.BLACK, 1);
 				tipText.scrollFactor.set();
@@ -253,13 +254,14 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 		}
 
 		tipTexts = makeTipTexts(
-			"E/Q - Camera Zoom In/Out
+			"Scroll Wheel / EQ - Camera Zoom In/Out
 			\nR - Reset Camera Zoom
-			\nIJKL - Move Camera
+			\nMiddle Click / IJKL - Move Camera
 			\nW/S - Previous/Next Animation
 			\nSpace - Play Animation
-			\nArrow Keys - Move Character Offset
+			\nRight Click / Arrow Keys - Move Character Offset
 			\nT - Reset Current Offset
+			\nCTRL + S - Quick Save
 			\nHold SHIFT to Move 10x faster\n"
 		);
 
@@ -590,13 +592,20 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 					offsets: lastOffsets,
 					cameraOffset: [animationXCam.value, animationYCam.value]
 				};
-
-				if (indices != null && indices.length > 0) {
-					char.animation.addByIndices(newAnim.anim, newAnim.name, newAnim.indices, "", newAnim.fps, newAnim.loop);
+				if (!char.isAnimate) {
+					if (indices != null && indices.length > 0) 
+						char.animation.addByIndices(newAnim.anim, newAnim.name, newAnim.indices, "", newAnim.fps, newAnim.loop);
+					else 
+						char.animation.addByPrefix(newAnim.anim, newAnim.name, newAnim.fps, newAnim.loop);	
+				#if USING_FLXANIMATE
 				} else {
-					char.animation.addByPrefix(newAnim.anim, newAnim.name, newAnim.fps, newAnim.loop);
-				}
-
+					if (indices != null && indices.length > 0) 
+						char.anim.addBySymbolIndices(newAnim.anim, newAnim.name, newAnim.indices, newAnim.fps, newAnim.loop);
+					else 
+						char.anim.addBySymbol(newAnim.anim, newAnim.name, newAnim.fps, newAnim.loop);
+					
+				}	
+				#end
 				if (!char.animOffsets.exists(newAnim.anim))
 					char.addOffset(newAnim.anim, 0, 0);
 
@@ -670,7 +679,7 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 		// tab_group.add(new FlxText(animationDropDown.x, animationDropDown.y - 18, 0, 'Animations:'));
 		tab_group.add(new FlxText(animationInputText.x, animationInputText.y - 15, 0, 'Animation name:'));
 		tab_group.add(new FlxText(animationNameFramerate.x, animationNameFramerate.y - 15, 0, 'Framerate:'));
-		tab_group.add(new FlxText(animationNameInputText.x, animationNameInputText.y - 15, 0, 'Animation on .XML/.TXT file:'));
+		tab_group.add(new FlxText(animationNameInputText.x, animationNameInputText.y - 15, 0, 'Animation on file:'));
 		tab_group.add(new FlxText(animationIndicesInputText.x, animationIndicesInputText.y - 15, 0, 'ADVANCED - Animation Indices:'));
 
 		tab_group.add(animationInputText);
@@ -959,7 +968,7 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 				trace(e.details());
 			}
 		}
-
+		trace(char.imageFile );
 		if (Paths.fileExists('images/' + char.imageFile + '/Animation.json', TEXT)) {
 			char.frames = Paths.animateAtlas(char.imageFile);
 		} else if (Paths.fileExists('images/' + char.imageFile + '.txt', TEXT)) {
@@ -976,10 +985,20 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 				var looped:Bool = !!anim.loop; // Bruh
 				var indices:Array<Int> = anim.indices;
 
-				if (indices != null && indices.length > 0)
-					char.animation.addByIndices(name, prefix, indices, "", framerate, looped);
-				else
-					char.animation.addByPrefix(name, prefix, framerate, looped);
+				if (!char.isAnimate) {
+					if (indices != null && indices.length > 0)
+						char.animation.addByIndices(name, prefix, indices, "", framerate, looped);
+					else
+						char.animation.addByPrefix(name, prefix, framerate, looped);
+				}
+				#if USING_FLXANIMATE
+				else {
+					if (indices != null && indices.length > 0)
+						char.anim.addBySymbolIndices(name, prefix, indices, framerate, looped);
+					else
+						char.anim.addBySymbol(name, prefix, framerate, looped);
+				}
+				#end
 			}
 		} else {
 			char.quickAnimAdd('idle', 'BF idle dance');
@@ -1002,7 +1021,7 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 			text.text = label;
 			text.setPosition(10, 20 + (18 * i));
 			text.setFormat(null, 16, color, CENTER);
-			text.setBorderStyle(FlxTextBorderStyle.OUTLINE, FlxColor.BLACK, 1);
+			text.setBorderStyle(FlxTextBorderStyle.OUTLINE_FAST, FlxColor.BLACK, 1);
 			text.scrollFactor.set();
 			animTexts.add(text);
 			return text;
@@ -1216,6 +1235,9 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 				return;
 			}
 		}
+
+		Application.current.window.cursor = editorMouse;
+
 		FNFGame.specialKeysEnabled = true;
 
 		if (testMode) {
@@ -1254,19 +1276,37 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 				return;
 			}
 
+			editorMouse = DEFAULT;
+
+			if(FlxG.keys.pressed.CONTROL && FlxG.keys.pressed.S) {
+				saveCharacter();
+			}
+
 			if (FlxG.keys.justPressed.R) {
 				resetCam();
 			}
 
-			if (FlxG.keys.pressed.E && FlxG.camera.zoom < 3) {
-				FlxG.camera.zoom += elapsed * FlxG.camera.zoom;
-				if (FlxG.camera.zoom > 3)
-					FlxG.camera.zoom = 3;
+			if(FlxG.mouse.pressedRight) {
+				editorMouse = POINTER;
+				changeCurOffset(-FlxG.mouse.deltaScreenX, -FlxG.mouse.deltaScreenY);
 			}
-			if (FlxG.keys.pressed.Q && FlxG.camera.zoom > 0.1) {
-				FlxG.camera.zoom -= elapsed * FlxG.camera.zoom;
-				if (FlxG.camera.zoom < 0.1)
-					FlxG.camera.zoom = 0.1;
+		
+			if (FlxG.keys.pressed.E) {
+				updateCamZoom(elapsed * FlxG.camera.zoom);
+			}
+
+			if (FlxG.keys.pressed.Q) {
+				updateCamZoom(-1 * (elapsed * FlxG.camera.zoom));
+			}
+			
+			if (FlxG.mouse.wheel != 0) {
+				updateCamZoom(FlxG.mouse.wheel * (0.1 * FlxG.camera.zoom));
+			}
+
+			if (FlxG.mouse.pressedMiddle) {
+				editorMouse = MOVE;
+				camFollow.x -= FlxG.mouse.deltaScreenX;
+				camFollow.y -= FlxG.mouse.deltaScreenY;
 			}
 
 			if (FlxG.keys.pressed.I || FlxG.keys.pressed.J || FlxG.keys.pressed.K || FlxG.keys.pressed.L) {
@@ -1287,17 +1327,18 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 
 			if (char.animationsArray.length > 0) {
 				var replayAnim = FlxG.keys.justPressed.SPACE;
-
-				if (FlxG.keys.justPressed.W) {
-					curAnim -= 1;
-					replayAnim = true;
+				// dont allow holding control so we can do quick saving
+				if(!FlxG.keys.pressed.CONTROL) {
+					if (FlxG.keys.justPressed.W) {
+						curAnim -= 1;
+						replayAnim = true;
+					}
+					if (FlxG.keys.justPressed.S) {
+						curAnim += 1;
+						replayAnim = true;
+					}
 				}
-
-				if (FlxG.keys.justPressed.S) {
-					curAnim += 1;
-					replayAnim = true;
-				}
-
+				
 				if (curAnim < 0)
 					curAnim = char.animationsArray.length - 1;
 
@@ -1330,7 +1371,18 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 
 		super.update(elapsed);
 	}
+	function updateCamZoom(_v:Float) {
+		//im a bellend
+		if (FlxG.camera.zoom <= 0.1) {
+			FlxG.camera.zoom = 0.1;
+		}
 
+		if(FlxG.camera.zoom >= 3) {
+			FlxG.camera.zoom = 3;
+		}
+
+		FlxG.camera.zoom += _v;
+	}
 	function onSaveComplete(_):Void {
 		FlxG.log.notice("Successfully saved file.");
 	}
