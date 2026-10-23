@@ -147,7 +147,13 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 	var curAnim:Int = 0;
 	var charName:String = 'pico';
 	var camFollow:FlxObject;
+
 	var editorMouse:MouseCursor;
+
+	var _zoomChanged = false;
+	var dragging_mouseOrigin:FlxPoint = null;
+	var dragging_startOffset:FlxPoint = null;
+
 	public function new(charName:String = 'pico', goToPlayState:Bool = true) {
 		super();
 		this.charName = charName;
@@ -1207,6 +1213,9 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 			}
 		}
 
+		var _zoomChanged = _zoomChanged;
+		this._zoomChanged = false;
+
 		Application.current.window.cursor = editorMouse;
 
 		FNFGame.specialKeysEnabled = true;
@@ -1257,9 +1266,30 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 				resetCam();
 			}
 
-			if(FlxG.mouse.pressedRight) {
-				editorMouse = POINTER;
-				changeCurOffset(-FlxG.mouse.deltaScreenX, -FlxG.mouse.deltaScreenY);
+			// This might seem very convoluted but it works exactly how I want it to work
+			if (FlxG.mouse.justPressedRight || _zoomChanged) {
+				var animOffsets = char.animationsArray[curAnim].offsets;
+				dragging_startOffset = FlxPoint.get(animOffsets[0], animOffsets[1]);
+				dragging_mouseOrigin = FlxPoint.get(FlxG.mouse.screenX, FlxG.mouse.screenY);
+			}
+			else if (dragging_mouseOrigin != null) {
+				if (FlxG.mouse.pressedRight) {
+					editorMouse = MOVE;
+
+					var startOffset = dragging_startOffset;
+					var mouseOrigin = dragging_mouseOrigin;
+					changeCurOffset(
+						Std.int(startOffset.x + mouseOrigin.x - FlxG.mouse.screenX), 
+						Std.int(startOffset.y + mouseOrigin.y - FlxG.mouse.screenY),
+						true
+					);
+				}else {
+					dragging_startOffset.put();
+					dragging_startOffset = null;
+
+					dragging_mouseOrigin.put();
+					dragging_mouseOrigin = null;
+				}
 			}
 		
 			if (FlxG.keys.pressed.E) {
@@ -1275,7 +1305,7 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 			}
 
 			if (FlxG.mouse.pressedMiddle) {
-				editorMouse = MOVE;
+				editorMouse = POINTER;
 				camFollow.x -= FlxG.mouse.deltaScreenX;
 				camFollow.y -= FlxG.mouse.deltaScreenY;
 			}
@@ -1344,6 +1374,8 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 	}
 	function updateCamZoom(_v:Float) {
 		//im a bellend
+		FlxG.camera.zoom += _v;
+
 		if (FlxG.camera.zoom <= 0.1) {
 			FlxG.camera.zoom = 0.1;
 		}
@@ -1352,7 +1384,7 @@ class CharacterEditorState extends funkin.states.base.CustomFlxUIState {
 			FlxG.camera.zoom = 3;
 		}
 
-		FlxG.camera.zoom += _v;
+		_zoomChanged = true;
 	}
 	function onSaveComplete(_):Void {
 		FlxG.log.notice("Successfully saved file.");
