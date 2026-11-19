@@ -104,9 +104,9 @@ class SpeedEvent
 	public var position:Float; // the y position where the change happens (modManager.getVisPos(songTime))
 	public var startTime:Float; // the song position (conductor.songTime) where the change starts
 	#if EASED_SVs
-	public var startSpeed:Float; // the previous event's speed
-	public var endTime:Null<Float> = null; // the song position (conductor.songTime) when the change ends
+	public var duration:Float = 0;
 	public var easeFunc:EaseFunction = FlxEase.linear;
+	public var startSpeed:Float = 1;
 	#end
 	public var speed:Float; // speed mult after the change
 }
@@ -1853,23 +1853,13 @@ class PlayState extends MusicBeatState
 
 	public function getTimeFromSV(time:Float, event:SpeedEvent):Float {
 		#if EASED_SVs
-		var func:EaseFunction = event.easeFunc;
-		if (event.endTime != null) {
-			var timeElapsed:Float = FlxMath.remapToRange(time, event.startTime, event.endTime, 0, 1);
-			if(timeElapsed > 1)timeElapsed = 1;
-			if(timeElapsed < 0)timeElapsed = 0;
-			var currentSpeed = FlxMath.lerp(event.startSpeed, event.speed, func(lastSVElapsed));
-
-			var toAdd:Float = time - lastSVTime;
-			var finalPosition:Float = lastSVPos + toAdd * currentSpeed;
-
-			lastSVPos = finalPosition;
-			lastSVTime = time;
-			lastSVElapsed = timeElapsed;
-			return finalPosition;
+		if(event.duration > 0){
+			var lerpedVal = FlxMath.lerp(event.startSpeed, event.speed, event.easeFunc(FlxMath.remapToRange(time, event.startTime, event.startTime + event.duration, 0, 1)));
+			//trace(lerpedVal);
+			return event.position + ((time - event.startTime) * Note.pixelsPerMS * lerpedVal);
 		}
+		else	
 		#end
-
 		return event.position + ((time - event.startTime) * Note.pixelsPerMS * event.speed);
 	}
 

@@ -112,28 +112,25 @@ class DefaultSongEvent extends SongEvent {
 				var speedChanges = game.speedChanges;
 
 				#if EASED_SVs
-				var endTime:Null<Float> = null;
 				var easeFunc:EaseFunction = FlxEase.linear;
+				var duration:Float = 0;
 
 				var tweenOptions = data.value2.split("/");
 				if(tweenOptions.length >= 1){
-					easeFunc = FlxEase.linear;
 					var parsed:Float = Std.parseFloat(tweenOptions[0]);
 					if(!Math.isNaN(parsed))
-						endTime = data.strumTime + (parsed * 1000);
+						duration = parsed * 1000;
 
 					if(tweenOptions.length > 1){
-						var f:EaseFunction = ScriptingUtil.getFlxEaseByString(tweenOptions[1]);
-						if(f != null)
-							easeFunc = f;
+						easeFunc = CoolUtil.getEaseFromString(tweenOptions[1]) ?? easeFunc;
 					}
 				}
 
 				var lastChange:SpeedEvent = speedChanges[speedChanges.length - 1];
 				speedChanges.push({
-					position: getTimeFromSV(data.strumTime, lastChange),
+					position: game.getTimeFromSV(data.strumTime, lastChange),
 					startTime: data.strumTime,
-					endTime: endTime,
+					duration: duration,
 					easeFunc: easeFunc,
 					startSpeed: lastChange.startSpeed,
 					speed: speed
