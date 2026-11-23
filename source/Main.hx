@@ -104,8 +104,13 @@ class Main extends Sprite
 		CrashHandler.init();
 		#end
 
-		#if (windows && cpp)
+		#if cpp
+		#if windows
 		funkin.api.Darkfriend.setDarkMode(!funkin.api.Darkfriend.isLightTheme());
+		#elseif (mac && lime >= "8.4.0")
+		@:privateAccess
+		funkin.api.MacOS.fixWindowColorSpace(cast stage.window.nativeHandle);
+		#end
 		#end
 
 		#if linux

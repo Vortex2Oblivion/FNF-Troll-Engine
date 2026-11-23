@@ -15,6 +15,7 @@
         <file name="${PROJECT_DIR}/src/memory.cpp" />
         <file name="${PROJECT_DIR}/src/darkmode.cpp" if="windows" />
         <file name="${PROJECT_DIR}/src/refreshrate.cpp" if="linux" />
+        <file name="${PROJECT_DIR}/src/macos.mm" if="macos" />
     </files>
 
     <target id="haxe">
